@@ -370,7 +370,7 @@ void Quaternion<Type>::FromEuler(const Vector<Type, 3> &a)
 template<class Type>
 Type Quaternion<Type>::EPS(Type orig) const
 {
-    if ((orig <= 10e-6f) && (orig >= -10e-6f))
+    if ((orig <= 1e-4f) && (orig >= -1e-4f))
         return(0.0f);
 
     return(orig);
@@ -384,9 +384,9 @@ void Quaternion<Type>::ToMatrix(Matrix<Type, 3, 3> &m) const
   Type yy = 2*q_y*q_y; Type yz = 2*q_y*q_z; Type zz = 2*q_z*q_z;
   Type wx = 2*q_w*q_x; Type wy = 2*q_w*q_y; Type wz = 2*q_w*q_z;
 
-  m(1,1) = EPS(1.0f-(yy+zz));m(1,2) = EPS(xy-wz);       m(1,3) = EPS(xz+wy);
-  m(2,1) = EPS(xy+wz);       m(2,2) = EPS(1.0f-(xx+zz));m(2,3) = EPS(yz-wx);
-  m(3,1) = EPS(xz-wy);       m(3,2) = EPS(yz+wx);       m(3,3) = EPS(1.0f-(xx+yy));
+  m(1,1) = 1.0f-EPS(yy+zz);  m(1,2) = EPS(xy-wz);       m(1,3) = EPS(xz+wy);
+  m(2,1) = EPS(xy+wz);       m(2,2) = 1.0f-EPS(xx+zz);  m(2,3) = EPS(yz-wx);
+  m(3,1) = EPS(xz-wy);       m(3,2) = EPS(yz+wx);       m(3,3) = 1.0f-EPS(xx+yy);
 }
 
 // conversion from matrix
