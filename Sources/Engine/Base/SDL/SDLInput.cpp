@@ -318,8 +318,16 @@ static void sdl_event_handler(const SDL_Event *event)
 
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
-            if (event->button.button <= 5)
-                _abKeysPressed[KID_MOUSE1 + (event->button.button-1)] = (event->button.state == SDL_PRESSED) ? TRUE : FALSE;
+            if (event->button.button <= 5) {
+              int button = KID_MOUSE1;
+              switch(event->button.button) {
+                case SDL_BUTTON_RIGHT: button = KID_MOUSE2; break;
+                case SDL_BUTTON_MIDDLE: button = KID_MOUSE3; break;
+                case 4: button = KID_MOUSE4; break;
+                case 5: button = KID_MOUSE5; break;
+              }
+              _abKeysPressed[button] = (event->button.state == SDL_PRESSED) ? TRUE : FALSE;
+            }
             break;
 
         case SDL_MOUSEWHEEL:
