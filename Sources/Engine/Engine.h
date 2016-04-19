@@ -28,6 +28,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // set this to 1 to enable checks whether somethig is deleted while iterating some array/container
 #define CHECKARRAYLOCKING 0
 
+#define __STDC_LIMIT_MACROS 1
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
