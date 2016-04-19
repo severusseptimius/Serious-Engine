@@ -70,6 +70,7 @@ typedef unsigned int        UINT;
 #else
   // AFAIK there were versions of MSVC where UINTPTR_MAX was incorrect,
   // so I use different code for Windows above
+  #define __STDC_LIMIT_MACROS 1
   #include <stdint.h> // UINTPTR_MAX
   #ifdef UINTPTR_MAX
     #if UINTPTR_MAX == 0xffffffffuL
