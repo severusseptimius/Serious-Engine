@@ -78,7 +78,6 @@ typedef uint32_t UINT;
   #error "Unknown CPU-Architecture, adapt this code to detect 32/64bitness of your system!"
 #endif
 
-
 // if the compiler complains about the typedef created by MY_STATIC_ASSERT being invalid
 // (because of array with negative size), it means the check for cond has failed
 #define MY_STATIC_ASSERT(namesuffx, cond) \
