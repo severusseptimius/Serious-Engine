@@ -724,6 +724,7 @@ void CInput::GetInput(BOOL bPreScan)
     // clear button's buffer
     memset( inp_ubButtonsBuffer, 0, sizeof( inp_ubButtonsBuffer));
 
+    Uint8 *keystate = SDL_GetKeyboardState(NULL);
     // for each Key
     for (INDEX iKey=0; iKey<ARRAYCOUNT(_akcKeys); iKey++) {
       const KeyConversion &kc = _akcKeys[iKey];
@@ -732,11 +733,11 @@ void CInput::GetInput(BOOL bPreScan)
       //INDEX iScan = kc.kc_iScanCode;
       INDEX iVirt = kc.kc_iVirtKey;
       // if reading async keystate
-      if (inp_iKeyboardReadingMethod==0) {
+      if (0/*inp_iKeyboardReadingMethod==0*/) {
         // if there is a valid virtkey
         if (iVirt>=0) {
           // is state is pressed
-          if (SDL_GetKeyboardState(NULL)[SDL_GetScancodeFromKey((SDL_Keycode)iVirt)]) {
+          if (keystate[SDL_GetScancodeFromKey((SDL_Keycode)iVirt)]) {
             // mark it as pressed
             inp_ubButtonsBuffer[iKID] = 0xFF;
           }
