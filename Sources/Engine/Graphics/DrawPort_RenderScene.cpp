@@ -38,16 +38,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define W  word ptr
 #define B  byte ptr
 
-#if (defined USE_PORTABLE_C)
-#define ASMOPT 0
-#elif (defined __MSVC_INLINE__)
-#define ASMOPT 1
-#elif (defined __GNU_INLINE__)
-#define ASMOPT 1
-#else
-#define ASMOPT 0
-#endif
-
 #define MAXTEXUNITS   4
 #define SHADOWTEXTURE 3
 
@@ -153,8 +143,7 @@ void AddElements( ScenePolygon *pspo)
   const INDEX ctElems = pspo->spo_ctElements;
   INDEX *piDst = _aiElements.Push(ctElems);
 
-#if (ASMOPT == 1)
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     mov     eax,D [pspo]
     mov     ecx,D [ctElems]
@@ -184,7 +173,7 @@ elemRest:
     mov     D [edi],eax
 elemDone:
   }
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   __asm__ __volatile__ (
     "movl    %[ctElems], %%ecx      \n\t"
     "movl    %[piDst], %%edi        \n\t"
@@ -218,11 +207,6 @@ elemDone:
         : FPU_REGS, "mm0", "mm1", "eax", "ecx", "esi", "edi",
           "cc", "memory"
   );
-
- #else
-   #error Please write inline ASM for your platform.
-
- #endif
 
 #else
   const INDEX iVtx0Pass = pspo->spo_iVtx0Pass;
@@ -495,9 +479,7 @@ static void RSBinToGroups( ScenePolygon *pspoFirst)
   // determine maximum used groups
   ASSERT( _ctGroupsCount);
 
-#if ASMOPT == 1
-
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     mov     eax,2
     bsr     ecx,D [_ctGroupsCount]
@@ -505,7 +487,7 @@ static void RSBinToGroups( ScenePolygon *pspoFirst)
     mov     D [_ctGroupsCount],eax
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   __asm__ __volatile__ (
     "movl     $2, %%eax          \n\t"
     "bsrl     (%%esi), %%ecx     \n\t"
@@ -516,24 +498,28 @@ static void RSBinToGroups( ScenePolygon *pspoFirst)
         : "eax", "ecx", "cc", "memory"
   );
 
- #else
-   #error Please write inline ASM for your platform.
-
- #endif
-
 #else
-  // emulate x86's bsr opcode...not fast.  :/
-  register DWORD val = _ctGroupsCount;
-  register INDEX bsr = 31;
-  if (val != 0)
-  {
-      while (bsr > 0)
-      {
-        if (val & (1l << bsr))
-            break;
-        bsr--;
-      }
-  }
+  // emulate x86's bsr opcode...
+
+  // GCC and clang have an architecture-independent intrinsic for this
+  // (it counts leading zeros starting at MSB and is undefined for 0)
+  #ifdef __GNUC__
+    INDEX bsr = 31;
+    if(_ctGroupsCount != 0)  bsr -= __builtin_clz(_ctGroupsCount);
+    else  bsr = 0;
+  #else // another compiler - doing it manually.. not fast.  :/
+    register DWORD val = _ctGroupsCount;
+    register INDEX bsr = 31;
+    if (val != 0)
+    {
+        while (bsr > 0)
+        {
+          if (val & (1l << bsr))
+              break;
+          bsr--;
+        }
+    }
+  #endif
 
   _ctGroupsCount = 2 << bsr;
 #endif
@@ -830,6 +816,7 @@ static void RSSetTextureCoords( ScenePolygon *pspoGroup, INDEX iLayer, INDEX iUn
   // generate tex coord for all scene polygons in list
   const FLOATmatrix3D &mViewer = _ppr->pr_ViewerRotationMatrix;
   const INDEX iMappingOffset = iLayer * sizeof(CMappingVectors);
+  (void)iMappingOffset; // shut up compiler, this is used if inline ASM is used
 
   for( ScenePolygon *pspo=pspoGroup; pspo!=NULL; pspo=pspo->spo_pspoSucc)
   {
@@ -858,10 +845,7 @@ static void RSSetTextureCoords( ScenePolygon *pspoGroup, INDEX iLayer, INDEX iUn
       continue;
     }
 
-// !!! FIXME: rcg11232001 This inline conversion is broken. Use the
-// !!! FIXME: rcg11232001  C version for now with GCC.
-#if ((ASMOPT == 1) && (!defined __GNU_INLINE__) && (!defined __INTEL_COMPILER))
-  #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
     __asm {
       mov     esi,D [pspo]
       mov     edi,D [iMappingOffset]
@@ -915,7 +899,7 @@ vtxLoop:
 /*
     // !!! FIXME: rcg11232001 This inline conversion is broken. Use the
     // !!! FIXME: rcg11232001  C version for now on Linux.
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
     STUBBED("debug this");
     __asm__ __volatile__ (
       "0:                                  \n\t" // vtxLoop
@@ -955,11 +939,6 @@ vtxLoop:
         : "cc", "memory"
     );
 */
-
- #else
-   #error Please write inline ASM for your platform.
-
- #endif
 
 #else
 
@@ -2001,7 +1980,7 @@ void RenderSceneBackground(CDrawPort *pDP, COLOR col)
   // set arrays
   gfxResetArrays();
   GFXVertex   *pvtx = _avtxCommon.Push(4);
-  GFXTexCoord *ptex = _atexCommon.Push(4);
+  /* GFXTexCoord *ptex = */ _atexCommon.Push(4);
   GFXColor    *pcol = _acolCommon.Push(4);
   pvtx[0].x =  0;  pvtx[0].y =  0;  pvtx[0].z = 1;
   pvtx[1].x =  0;  pvtx[1].y = iH;  pvtx[1].z = 1;

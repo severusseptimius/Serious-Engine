@@ -109,6 +109,30 @@ MY_STATIC_ASSERT(size_tSize, sizeof(size_t) == sizeof(void*));
   #define ASMSYM(x) #x
 #endif
 
+/* should we enable inline asm? */
+#ifndef USE_PORTABLE_C
+  #if defined(__MSVC_INLINE__)
+    /* the build system selected __MSVC_INLINE__ */
+  #elif defined(__GNU_INLINE_X86_32__)
+    /* the build system selected __GNU_INLINE_X86_32__ */
+  #elif defined(_MSC_VER) && defined(_M_IX86)
+    #define __MSVC_INLINE__
+  #elif defined (__GNUC__) && defined(__i386)
+    #define __GNU_INLINE_X86_32__
+  #elif defined (__GNUC__) && defined(__x86_64__)
+    #define __GNU_INLINE_X86_64__
+  #endif
+
+  #if defined(__GNU_INLINE_X86_32__) || defined(__GNU_INLINE_X86_64__)
+    #define __GNU_INLINE_X86__
+  #endif
+
+  #if defined(__GNU_INLINE_X86__)
+    #define FPU_REGS "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
+    #define MMX_REGS "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7"
+  #endif
+#endif
+
 #ifdef PLATFORM_UNIX  /* rcg10042001 */
     #include <stdio.h>
     #include <string.h>
@@ -132,25 +156,6 @@ MY_STATIC_ASSERT(size_tSize, sizeof(size_t) == sizeof(void*));
       #if (!defined __INTEL_COMPILER)
         #define __INTEL_COMPILER  __ICC
       #endif
-    #endif
-
-    #if ((defined __GNUC__) && (!defined __GNU_INLINE__))
-      #define __GNU_INLINE__
-    #endif
-
-    #if (defined __INTEL_COMPILER)
-      #if ((!defined __GNU_INLINE__) && (!defined __MSVC_INLINE__))
-        #error Please define __GNU_INLINE__ or __MSVC_INLINE__ with Intel C++.
-      #endif
-
-      #if ((defined __GNU_INLINE__) && (defined __MSVC_INLINE__))
-        #error Define either __GNU_INLINE__ or __MSVC_INLINE__ with Intel C++.
-      #endif
-    #endif
-
-    #if defined(__GNU_INLINE__) && defined(__i386__)
-      #define FPU_REGS "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
-      #define MMX_REGS "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7"
     #endif
 
     #ifndef PAGESIZE
@@ -230,10 +235,7 @@ MY_STATIC_ASSERT(size_tSize, sizeof(size_t) == sizeof(void*));
 
     inline ULONG _rotl(ULONG ul, int bits)
     {
-        #if (defined USE_PORTABLE_C)
-            // DG: according to http://blog.regehr.org/archives/1063 this is fast
-            return (ul<<bits) | (ul>>(-bits&31));
-        #elif (defined __GNU_INLINE__)
+        #if (defined __GNU_INLINE_X86_32__)
             // This, on the other hand, is wicked fast.  :)
             __asm__ __volatile__ (
                 "roll %%cl, %%eax    \n\t"
@@ -255,7 +257,8 @@ MY_STATIC_ASSERT(size_tSize, sizeof(size_t) == sizeof(void*));
             return(ul);
 
         #else
-            #error need inline asm for your platform.
+            // DG: according to http://blog.regehr.org/archives/1063 this is fast
+            return (ul<<bits) | (ul>>(-bits&31));
         #endif
     }
 
@@ -676,14 +679,44 @@ inline void Clear(float i) {};
 inline void Clear(double i) {};
 inline void Clear(void *pv) {};
 
-// These macros are not safe to use unless data is UNSIGNED!
-#define BYTESWAP16_unsigned(x)   ((((x)>>8)&0xff)+ (((x)<<8)&0xff00))
-#define BYTESWAP32_unsigned(x)   (((x)>>24) + (((x)>>8)&0xff00) + (((x)<<8)&0xff0000) + ((x)<<24))
+// DG: screw macros, use inline functions instead - they're even safe for signed values
+inline UWORD BYTESWAP16_unsigned(UWORD x)
+{
+#ifdef __GNUC__ // GCC and clang have a builtin that hopefully does the most efficient thing
+  return __builtin_bswap16(x);
+#else
+  return (((x)>>8)&0xff)+ (((x)<<8)&0xff00);
+#endif
+}
+
+inline ULONG BYTESWAP32_unsigned(ULONG x)
+{
+#ifdef __GNUC__ // GCC and clang have a builtin that hopefully does the most efficient thing
+  return __builtin_bswap32(x);
+#else
+  return ((x)>>24) + (((x)>>8)&0xff00) + (((x)<<8)&0xff0000) + ((x)<<24);
+#endif
+}
+
+inline __uint64 BYTESWAP64_unsigned(__uint64 x)
+{
+#ifdef __GNUC__ // GCC and clang have a builtin that hopefully does the most efficient thing
+  return __builtin_bswap64(x);
+#else
+  ULONG l = BYTESWAP32_unsigned((ULONG)(val & 0xFFFFFFFF));
+  ULONG h = BYTESWAP32_unsigned((ULONG)((val >> 32) & 0xFFFFFFFF));
+  return (((__uint64)l) << 32) | ((__uint64)h);
+#endif
+}
 
 // rcg03242004
 #if PLATFORM_LITTLEENDIAN
 	#define BYTESWAP(x)
 #else
+
+// TODO: DG: the following stuff could probably be updated to use the functions above properly,
+//       which should make lots of cases easier. As I don't have a big endian machine I can't test,
+//       so I won't touch this for now.
 
     static inline void BYTESWAP(UWORD &val)
     {

@@ -67,7 +67,9 @@ CTCriticalSection zip_csLock; // critical section for access to zlib functions
 
 
 // to keep system gamma table
+#ifdef PLATFORM_WIN32 // DG: other platforms don't (currently?) use this
 static UWORD auwSystemGamma[256*3];
+#endif
 
 
 // OS info
@@ -125,6 +127,7 @@ BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 
 static void DetectCPU(void)
 {
+  char strVendor[12+1] = { 0 };
 #if (defined USE_PORTABLE_C)  // rcg10072001
   CPrintF(TRANSV("  (No CPU detection in this binary.)\n"));
   #ifdef PLATFORM_PANDORA
@@ -132,10 +135,9 @@ static void DetectCPU(void)
   #endif
 
 #else
-  char strVendor[12+1];
   strVendor[12] = 0;
-  ULONG ulTFMS;
-  ULONG ulFeatures;
+  ULONG ulTFMS = 0;
+  ULONG ulFeatures = 0;
 
   #if (defined __MSVC_INLINE__)
   // test MMX presence and update flag
@@ -151,42 +153,46 @@ static void DetectCPU(void)
     mov     dword ptr [ulFeatures], edx
   }
 
-  #elif (defined __GNU_INLINE__)
+  #elif (defined __GNU_INLINE_X86__)
+    ULONG eax, ebx, ecx, edx;
     // test MMX presence and update flag
     __asm__ __volatile__ (
-        "pushl   %%ebx            \n\t"
-        "xorl    %%eax,%%eax      \n\t"  // request for basic id
+    #if (defined __GNU_INLINE_X86_64__)
         "cpuid                    \n\t"
-        "movl    %%ebx,  (%%esi)  \n\t"
-        "movl    %%edx, 4(%%esi)  \n\t"
-        "movl    %%ecx, 8(%%esi)  \n\t"
-        "popl    %%ebx            \n\t"
-            : // no specific outputs.
-            : "S" (strVendor)
-            : "eax", "ecx", "edx", "memory"
+            : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
+    #else
+        "movl    %%ebx, %%esi     \n\t"
+        "cpuid                    \n\t"
+        "xchgl   %%ebx, %%esi     \n\t"
+            : "=a" (eax), "=S" (ebx), "=c" (ecx), "=d" (edx)
+    #endif
+            : "a" (0) // request for basic id
     );
-
-        // need to break this into a separate asm block, since I'm clobbering
-        //  too many registers. There's something to be said for letting MSVC
-        //  figure out where on the stack your locals are resting, but yeah,
-        //  I know, that's x86-specific anyhow...
-        // !!! FIXME: can probably do this right with modern GCC.
+    memcpy(strVendor + 0, &ebx, 4);
+    memcpy(strVendor + 4, &edx, 4);
+    memcpy(strVendor + 8, &ecx, 4);
 
     __asm__ __volatile__ (
-        "pushl   %%ebx                  \n\t"
-        "movl    $1, %%eax              \n\t"  // request for TFMS feature flags
-        "cpuid                          \n\t"
-        "mov     %%eax, (%%esi)         \n\t"  // remember type, family, model and stepping
-        "mov     %%edx, (%%edi)         \n\t"
-        "popl    %%ebx                  \n\t"
-            : // no specific outputs.
-            : "S" (&ulTFMS), "D" (&ulFeatures)
-            : "eax", "ecx", "edx", "memory"
+    #if (defined __GNU_INLINE_X86_64__)
+        "cpuid                    \n\t"
+            : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
+    #else
+        "movl    %%ebx, %%esi     \n\t"
+        "cpuid                    \n\t"
+        "xchgl   %%ebx, %%esi     \n\t"
+            : "=a" (eax), "=S" (ebx), "=c" (ecx), "=d" (edx)
+    #endif
+            : "a" (1) // request for TFMS feature flags
     );
+    ulTFMS = eax;
+    ulFeatures = edx;
 
-  #else
-    #error Please implement for your platform or define USE_PORTABLE_C.
   #endif
+
+  if (ulTFMS == 0) {
+    CPrintF(TRANSV("  (No CPU detection in this binary.)\n"));
+    return;
+  }
 
   INDEX iType     = (ulTFMS>>12)&0x3;
   INDEX iFamily   = (ulTFMS>> 8)&0xF;
@@ -218,8 +224,6 @@ static void DetectCPU(void)
   sys_iCPUMHz = INDEX(_pTimer->tm_llCPUSpeedHZ/1E6);
 
   if( !bMMX) FatalError( TRANS("MMX support required but not present!"));
-
-#endif  // defined USE_PORTABLE_C
 }
 
 static void DetectCPUWrapper(void)
@@ -835,7 +839,7 @@ ENGINE_API void SE_UpdateWindowHandle( HWND hwndMain)
   _bFullScreen = _pGfx!=NULL && (_pGfx->gl_ulFlags&GLF_FULLSCREEN);
 }
 
-
+#ifdef PLATFORM_WIN32
 static BOOL TouchBlock(UBYTE *pubMemoryBlock, INDEX ctBlockSize)
 {
 #if (defined __MSC_VER)
@@ -873,12 +877,13 @@ touchLoop:
   // !!! More importantly, will this help if the system is paging to disk
   // !!! like mad anyhow? Leaving this as a no-op for most systems seems safe
   // !!! to me.  --ryan.
+  // DG: put this into #ifdef PLATFORM_WIN32 because otherwise the function is not called anyway
 
 #endif
 
   return TRUE;
 }
-
+#endif // PLATFORM_WIN32
 
 // pretouch all memory commited by process
 BOOL _bNeedPretouch = FALSE;

@@ -67,18 +67,7 @@ ULONG PrepareTexture( UBYTE *pubTexture, PIX pixSizeI, PIX pixSizeJ)
   // need to upload from RGBA format
   const PIX pixTextureSize = pixSizeI*pixSizeJ;
 
- #if (defined USE_PORTABLE_C)
-   const UBYTE* src = pubTexture;
-   DWORD* dst = (DWORD*)(pubTexture+pixTextureSize);
-   for (int i=0; i<pixTextureSize; i++) {
-    const DWORD tmp = ((DWORD)*src) | 0xFFFFFF00;
-    *dst = ((tmp << 24) & 0xff000000 ) | ((tmp <<  8) & 0x00ff0000 ) |
-      ((tmp >>  8) & 0x0000ff00 ) | ((tmp >> 24) & 0x000000ff );
-    src++;
-    dst++;
-   }
-
- #elif (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     mov     esi,D [pubTexture]
     mov     edi,D [pubTexture]
@@ -95,7 +84,7 @@ pixLoop:
     jnz     pixLoop
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   __asm__ __volatile__ (
     "movl    %[pubTexture], %%esi      \n\t"
     "movl    %[pixTextureSize], %%ecx  \n\t"
@@ -115,10 +104,17 @@ pixLoop:
         : "eax", "ecx", "esi", "edi", "cc", "memory"
   );
 
- #else
-   #error Write inline ASM for your platform.
+#else
+   const UBYTE* src = pubTexture;
+   DWORD* dst = (DWORD*)(pubTexture+pixTextureSize);
+   for (int i=0; i<pixTextureSize; i++) {
+    const DWORD tmp = ((DWORD)*src) | 0xFFFFFF00;
+    *dst = BYTESWAP32_unsigned((ULONG)tmp);
+    src++;
+    dst++;
+   }
 
- #endif
+#endif
 
   // determine internal format
   extern INDEX gap_bAllowGrayTextures;
@@ -278,7 +274,7 @@ void StartFog( CFogParameters &fp, const FLOAT3D &vViewPosAbs, const FLOATmatrix
     // exp fog
     case AT_EXP: {
       // calculate linear step for the fog parameter
-      FLOAT fT = 0.0f;
+      //FLOAT fT = 0.0f;
       FLOAT fTStep = 1.0f/pixSizeL*fFar*fDensity*fA;
       // fog is exp(-t) function of fog parameter, now calculate
       // step (actually multiplication) for the fog
@@ -291,7 +287,7 @@ void StartFog( CFogParameters &fp, const FLOAT3D &vViewPosAbs, const FLOATmatrix
     } break;
     case AT_EXP2: {
       // calculate linear step for the fog parameter
-      FLOAT fT = 0.0f;
+      //FLOAT fT = 0.0f;
       FLOAT fTStep = 1.0f/pixSizeL*fFar*fDensity*fA;
       // fog is exp(-t^2) function of fog parameter, now calculate
       // first and second order step (actually multiplication) for the fog

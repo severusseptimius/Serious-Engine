@@ -562,9 +562,9 @@ void CBrushShadowMap::CheckLayersUpToDate(void)
     CBrushShadowLayer &bsl = *itbsl;
     if( bsl.bsl_ulFlags&BSLF_ALLDARK) continue;
     // light source must be valid
+    ASSERT( bsl.bsl_plsLightSource!=NULL);
+    if( bsl.bsl_plsLightSource==NULL) continue;
     CLightSource &ls = *bsl.bsl_plsLightSource;
-    ASSERT( &ls!=NULL);
-    if( &ls==NULL) continue;
     // if the layer is not up to date
     if( bsl.bsl_colLastAnim != ls.GetLightColor()) {
       // invalidate entire shadow map
@@ -581,9 +581,9 @@ BOOL CBrushShadowMap::HasDynamicLayers(void)
   // for each layer
   FOREACHINLIST( CBrushShadowLayer, bsl_lnInShadowMap, bsm_lhLayers, itbsl)
   { // light source must be valid
+    ASSERT( itbsl->bsl_plsLightSource!=NULL);
+    if( itbsl->bsl_plsLightSource==NULL) continue;
     CLightSource &ls = *itbsl->bsl_plsLightSource;
-    ASSERT( &ls!=NULL);
-    if( &ls==NULL) continue;
     // if the layer is dynamic, it has
     if( ls.ls_ulFlags&LSF_DYNAMIC) return TRUE;
   }
@@ -605,7 +605,7 @@ BOOL CBrushShadowMap::IsShadowFlat( COLOR &colFlat)
   COLOR col;
   UBYTE ubR,ubG,ubB, ubR1,ubG1,ubB1;
   SLONG slR=0,slG=0,slB=0;
-  INDEX ctPointLights=0;
+  //INDEX ctPointLights=0;
   CBrushPolygon *pbpo = GetBrushPolygon();
 
   // if the shadowmap is not using the shading mode

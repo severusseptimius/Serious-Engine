@@ -169,7 +169,13 @@ void InitStreams(void)
   }
   // find eventual extension for the mod's dlls
   _strModExt = "";
-  LoadStringVar(CTString("ModExt.txt"), _strModExt);
+  // DG: apparently both ModEXT.txt and ModExt.txt exist in the wild.
+  CTFileName tmp;
+  if(ExpandFilePath(EFP_READ, CTString("ModEXT.txt"), tmp) != EFP_NONE) {
+    LoadStringVar(CTString("ModEXT.txt"), _strModExt);
+  } else {
+    LoadStringVar(CTString("ModExt.txt"), _strModExt);
+  }
 
 
   CPrintF(TRANSV("Loading group files...\n"));
@@ -934,7 +940,7 @@ void CTFileStream::Create_t(const CTFileName &fnFileName,
   }
 
   CTFileName fnmFullFileName;
-  INDEX iFile = ExpandFilePath(EFP_WRITE, fnFileNameAbsolute, fnmFullFileName);
+  /* INDEX iFile = */ ExpandFilePath(EFP_WRITE, fnFileNameAbsolute, fnmFullFileName);
 
   // check parameters
   ASSERT(strlen(fnFileNameAbsolute)>0);
@@ -1317,7 +1323,7 @@ BOOL FileExistsForWriting(const CTFileName &fnmFile)
   }
   // expand the filename to full path for writing
   CTFileName fnmFullFileName;
-  INDEX iFile = ExpandFilePath(EFP_WRITE, fnmFile, fnmFullFileName);
+  /* INDEX iFile = */ ExpandFilePath(EFP_WRITE, fnmFile, fnmFullFileName);
 
   // check if it exists
   FILE *f = fopen(fnmFullFileName, "rb");
@@ -1433,7 +1439,7 @@ static INDEX ExpandFilePath_read(ULONG ulType, const CTFileName &fnmFile, CTFile
 {
   // search for the file in zips
   INDEX iFileInZip = UNZIPGetFileIndex(fnmFile);
-  const BOOL userdir_not_basedir = (_fnmUserDir != _fnmApplicationPath);
+  //const BOOL userdir_not_basedir = (_fnmUserDir != _fnmApplicationPath);
 
   // if a mod is active
   if (_fnmMod!="") {

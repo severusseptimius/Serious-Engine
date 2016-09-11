@@ -29,7 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <Engine/Base/Priority.inl>
 
 // !!! FIXME: use SDL timer code instead and rdtsc never?
-#if (USE_PORTABLE_C) 
+#if (defined PLATFORM_UNIX) && !defined(__GNU_INLINE_X86_32__)
 #define USE_GETTIMEOFDAY 1
 #endif
 
@@ -64,7 +64,7 @@ static inline __int64 ReadTSC(void)
   }
   return mmRet;
 
-#elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   __int64 mmRet;
   __asm__ __volatile__ (
     "rdtsc                    \n\t"
@@ -161,8 +161,8 @@ void CTimer_TimerFunc_internal(void)
     CTimerValue tvTimeNow = _pTimer->GetHighPrecisionTimer();
     TIME        tmTickNow = _pTimer->tm_RealTimeTimer;
     // calculate how long has passed since we have last been on time
-    TIME tmTimeDelay = (TIME)(tvTimeNow - _pTimer->tm_tvLastTimeOnTime).GetSeconds();
-    TIME tmTickDelay =       (tmTickNow - _pTimer->tm_tmLastTickOnTime);
+    //TIME tmTimeDelay = (TIME)(tvTimeNow - _pTimer->tm_tvLastTimeOnTime).GetSeconds();
+    //TIME tmTickDelay =       (tmTickNow - _pTimer->tm_tmLastTickOnTime);
 
     _sfStats.StartTimer(CStatForm::STI_TIMER);
     // if we are keeping up to time (more or less)
@@ -209,13 +209,14 @@ Uint32 CTimer_TimerFunc_SDL(Uint32 interval, void* param)
 
 #pragma inline_depth()
 
+
+#ifdef PLATFORM_WIN32 // DG: not used on other platforms
 #define MAX_MEASURE_TRIES 5
 static INDEX _aiTries[MAX_MEASURE_TRIES];
 
 // Get processor speed in Hertz
 static __int64 GetCPUSpeedHz(void)
 {
-#ifdef PLATFORM_WIN32
   // get the frequency of the 'high' precision timer
   __int64 llTimerFrequency;
   BOOL bPerformanceCounterPresent = QueryPerformanceFrequency((LARGE_INTEGER*)&llTimerFrequency);
@@ -296,14 +297,8 @@ static __int64 GetCPUSpeedHz(void)
     // use measured value
     return (__int64)slSpeedRead*1000000;
   }
-#else
-
-    STUBBED("I hope this isn't critical...");
-    return(1);
-
-#endif
-
 }
+#endif // PLATFORM_WIN32
 
 
 #if PLATFORM_MACOSX

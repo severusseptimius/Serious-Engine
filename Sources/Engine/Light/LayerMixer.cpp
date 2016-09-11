@@ -40,16 +40,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define W  word ptr
 #define B  byte ptr
 
-#if (defined USE_PORTABLE_C)
-  #define ASMOPT 0
-#elif (defined __MSVC_INLINE__)
-  #define ASMOPT 1
-#elif (defined __GNU_INLINE__)
-  #define ASMOPT 1
-#else
-  #define ASMOPT 0
-#endif
-
 extern INDEX shd_bFineQuality;
 extern INDEX shd_iFiltering;
 extern INDEX shd_iDithering;
@@ -138,6 +128,7 @@ static inline void IncrementByteWithClip( UBYTE &ub, SLONG slAdd)
   ub = pubClipByte[(SLONG)ub+slAdd];
 }
 
+#if 0 // DG: unused.
 // increment a color without overflowing it
 static inline void IncrementColorWithClip( UBYTE &ubR, UBYTE &ubG, UBYTE &ubB,
                                            SLONG  slR, SLONG  slG, SLONG  slB)
@@ -146,6 +137,7 @@ static inline void IncrementColorWithClip( UBYTE &ubR, UBYTE &ubG, UBYTE &ubB,
   IncrementByteWithClip( ubG, slG);
   IncrementByteWithClip( ubB, slB);
 }
+#endif // 0 (unused)
 
 // add the intensity to the pixel
 inline void CLayerMixer::AddToCluster( UBYTE *pub)
@@ -286,12 +278,11 @@ void CLayerMixer::AddAmbientPoint(void)
   // prepare some local variables
   mmDDL2oDU_AddAmbientPoint = _slDDL2oDU;
   mmDDL2oDV_AddAmbientPoint = _slDDL2oDV;
-  ULONG ulLightRGB = ByteSwap(lm_colLight);
+  ULONG ulLightRGB = ByteSwap(lm_colLight); // FIXME: shouldn't this be used in plain C impl too?
   _slLightMax<<=7;
   _slLightStep>>=1;
 
-#if (ASMOPT == 1)
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     // prepare interpolants
     movd    mm0,D [_slL2Row]
@@ -364,7 +355,7 @@ skipPixel:
     emms
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   ULONG tmp1, tmp2;
   __asm__ __volatile__ (
     // prepare interpolants
@@ -439,10 +430,6 @@ skipPixel:
         : FPU_REGS, MMX_REGS, "eax", "ecx", "edi", "cc", "memory"
   );
 
- #else
-  #error Write inline asm for your platform.
- #endif
-
 #else
 
     // !!! FIXME WARNING: I have not checked this code, and it could be
@@ -491,13 +478,12 @@ void CLayerMixer::AddAmbientMaskPoint( UBYTE *pubMask, UBYTE ubMask)
   // prepare some local variables
   mmDDL2oDU_addAmbientMaskPoint = _slDDL2oDU;
   mmDDL2oDV_addAmbientMaskPoint = _slDDL2oDV;
-  ULONG ulLightRGB = ByteSwap(lm_colLight);
+  ULONG ulLightRGB = ByteSwap(lm_colLight); // FIXME: shouldn't this be used in plain C impl too?
   _slLightMax<<=7;
   _slLightStep>>=1;
 
 
-#if (ASMOPT == 1)
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     // prepare interpolants
     movd    mm0,D [_slL2Row]
@@ -576,7 +562,7 @@ skipPixel:
     emms
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   ULONG tmp1, tmp2;
   __asm__ __volatile__ (
     // prepare interpolants
@@ -660,10 +646,6 @@ skipPixel:
           "cc", "memory"
   );
 
- #else
-  #error Please write inline assembly for your platform.
- #endif
-
 #else   // Portable C version...
 
   UBYTE* pubLayer = (UBYTE*)_pulLayer;
@@ -674,7 +656,7 @@ skipPixel:
     for( PIX pixU=0; pixU<_iPixCt; pixU++)
     {
       // if the point is not masked
-      if( *pubMask & ubMask && (slL2Point<FTOX)) {
+      if( (*pubMask & ubMask) && (slL2Point<FTOX)) {
         SLONG slL = (slL2Point>>SHIFTX)&(SQRTTABLESIZE-1);  // and is just for degenerate cases
         SLONG slIntensity = _slLightMax;
         slL = aubSqrt[slL];
@@ -719,12 +701,11 @@ void CLayerMixer::AddDiffusionPoint(void)
   // prepare some local variables
   mmDDL2oDU_AddDiffusionPoint = _slDDL2oDU;
   mmDDL2oDV_AddDiffusionPoint = _slDDL2oDV;
-  ULONG ulLightRGB = ByteSwap(lm_colLight);
+  ULONG ulLightRGB = ByteSwap(lm_colLight); // FIXME: shouldn't this be used in plain C impl too?
   _slLightMax<<=7;
   _slLightStep>>=1;
 
-#if ASMOPT == 1
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     // prepare interpolants
     movd    mm0,D [_slL2Row]
@@ -796,7 +777,7 @@ skipPixel:
     emms
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   ULONG tmp1, tmp2;
   __asm__ __volatile__ (
     // prepare interpolants
@@ -871,10 +852,6 @@ skipPixel:
         : FPU_REGS, MMX_REGS, "eax", "ecx", "edi", "cc", "memory"
   );
 
- #else
-  #error Write inline assembly for your platform.
- #endif
-
 #else
   // for each pixel in the shadow map
   UBYTE* pubLayer = (UBYTE*)_pulLayer;
@@ -925,12 +902,11 @@ void CLayerMixer::AddDiffusionMaskPoint( UBYTE *pubMask, UBYTE ubMask)
   // prepare some local variables
   mmDDL2oDU_AddDiffusionMaskPoint = _slDDL2oDU;
   mmDDL2oDV_AddDiffusionMaskPoint = _slDDL2oDV;
-  ULONG ulLightRGB = ByteSwap(lm_colLight);
+  ULONG ulLightRGB = ByteSwap(lm_colLight); // FIXME: shouldn't this be used in plain C impl too?
   _slLightMax<<=7;
   _slLightStep>>=1;
 
-#if (ASMOPT == 1)
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     // prepare interpolants
     movd    mm0,D [_slL2Row]
@@ -1008,7 +984,7 @@ skipPixel:
     emms
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   ULONG tmp1, tmp2;
   __asm__ __volatile__ (
     // prepare interpolants
@@ -1091,11 +1067,6 @@ skipPixel:
           "cc", "memory"
   );
 
- #else
-  #error Write inline ASM for your platform.
-
- #endif
-
 #else
 
   // for each pixel in the shadow map
@@ -1107,7 +1078,7 @@ skipPixel:
     for( PIX pixU=0; pixU<_iPixCt; pixU++)
     {
       // if the point is not masked
-      if( *pubMask&ubMask && (slL2Point<FTOX)) {
+      if( (*pubMask & ubMask) && (slL2Point<FTOX)) {
         SLONG sl1oL = (slL2Point>>SHIFTX)&(SQRTTABLESIZE-1);  // and is just for degenerate cases
         sl1oL = auw1oSqrt[sl1oL];
         SLONG slIntensity = _slLightMax;
@@ -1201,8 +1172,7 @@ BOOL CLayerMixer::PrepareOneLayerPoint( CBrushShadowLayer *pbsl, BOOL bNoMask)
   FLOAT fDL2oDV     = fDDL2oDV + 2*(lm_vStepV%v00);
   //_v00 = v00;
 
-#if ((ASMOPT == 1) && (!defined __GNU_INLINE__))
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     fld     D [fDDL2oDU]
     fadd    D [fDDL2oDU]
@@ -1230,12 +1200,6 @@ BOOL CLayerMixer::PrepareOneLayerPoint( CBrushShadowLayer *pbsl, BOOL bNoMask)
     fistp   D [_slDDL2oDV]
     fistp   D [_slDDL2oDU]
   }
- #elif (defined __GNU_INLINE__)
-    STUBBED("inline asm.");
- #else
-   #error Please write inline assembly for your platform.
- #endif
-
 #else
   fDDL2oDU     *= 2;
   fDDL2oDV     *= 2;
@@ -1321,8 +1285,7 @@ void CLayerMixer::AddOneLayerGradient( CGradientParameters &gp)
   _pulLayer  = lm_pulShadowMap;
   FLOAT fStart = Clamp( fGr00-(fDGroDJ+fDGroDI)*0.5f, 0.0f, 1.0f);
 
-#if ((ASMOPT == 1) && (!defined __GNU_INLINE__))
- #if (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __int64 mmRowAdv;
   SLONG fixGRow  = (fGr00-(fDGroDJ+fDGroDI)*0.5f)*32767.0f; // 16:15
   SLONG slModulo = (lm_pixCanvasSizeU-lm_pixPolygonSizeU) *BYTES_PER_TEXEL;
@@ -1436,14 +1399,6 @@ rowNext:
 rowDone:
     emms
   }
- #elif (defined __GNU_INLINE__)
-
-    STUBBED("WRITE ME. Argh.");
-
- #else
-  #error Need inline assembly for your platform.
- #endif
-
 #else
   // well, make gradient ...
   SLONG slR0=0,slG0=0,slB0=0;
@@ -1528,9 +1483,8 @@ rowDone:
 // apply directional light or ambient to layer
 void CLayerMixer::AddDirectional(void)
 {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
   ULONG ulLight = ByteSwap( lm_colLight);
- #if (defined __MSVC_INLINE__)
   __asm {
     // prepare pointers and variables
     mov     edi,D [_pulLayer]
@@ -1565,7 +1519,8 @@ rowNext:
     emms
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
+  ULONG ulLight = ByteSwap( lm_colLight);
   ULONG tmp;
   __asm__ __volatile__ (
     // prepare pointers and variables
@@ -1608,10 +1563,6 @@ rowNext:
         : FPU_REGS, "mm5", "mm6", "ecx", "edi", "cc", "memory"
   );
 
- #else
-   #error Write inline assembly for your platform.
- #endif
-
 #else
   UBYTE* pubLayer = (UBYTE*)_pulLayer;
   // for each pixel in the shadow map
@@ -1631,9 +1582,8 @@ rowNext:
 // apply directional light thru mask to layer
 void CLayerMixer::AddMaskDirectional( UBYTE *pubMask, UBYTE ubMask)
 {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
   ULONG ulLight = ByteSwap( lm_colLight);
- #if (defined __MSVC_INLINE__)
   // prepare some local variables
   __asm {
     // prepare pointers and variables
@@ -1665,7 +1615,8 @@ skipLight:
     emms
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
+  ULONG ulLight = ByteSwap( lm_colLight);
   ULONG tmp;
   __asm__ __volatile__ (
     // prepare pointers and variables
@@ -1705,10 +1656,6 @@ skipLight:
         : FPU_REGS, "mm5", "mm6", "ecx", "edx", "esi", "edi",
           "cc", "memory"
   );
-
- #else
-  #error Please write inline assembly for your platform.
- #endif
 
 #else
   UBYTE* pubLayer = (UBYTE*)_pulLayer;
@@ -1764,7 +1711,7 @@ void CLayerMixer::AddOneLayerDirectional( CBrushShadowLayer *pbsl, UBYTE *pubMas
 
   // get the light source of the layer
   lm_plsLight = pbsl->bsl_plsLightSource;
-  const FLOAT3D &vLight = lm_plsLight->ls_penEntity->GetPlacement().pl_PositionVector;
+  //const FLOAT3D &vLight = lm_plsLight->ls_penEntity->GetPlacement().pl_PositionVector;
   AnglesToDirectionVector( lm_plsLight->ls_penEntity->GetPlacement().pl_OrientationAngle,
                            lm_vLightDirection);
   // calculate intensity
@@ -1823,8 +1770,9 @@ void CLayerMixer::MixOneMipmap(CBrushShadowMap *pbsm, INDEX iMipmap)
     if( lm_pbpoPolygon->bpo_ulFlags&BPOF_HASDIRECTIONALAMBIENT) {
       {FOREACHINLIST( CBrushShadowLayer, bsl_lnInShadowMap, lm_pbsmShadowMap->bsm_lhLayers, itbsl) {
         CBrushShadowLayer &bsl = *itbsl;
+        ASSERT( bsl.bsl_plsLightSource!=NULL);
+        if( bsl.bsl_plsLightSource==NULL) continue; // safety check
         CLightSource &ls = *bsl.bsl_plsLightSource;
-        ASSERT( &ls!=NULL); if( &ls==NULL) continue; // safety check
         if( !(ls.ls_ulFlags&LSF_DIRECTIONAL)) continue;  // skip non-directional layers
         COLOR col = AdjustColor( ls.GetLightAmbient(), _slShdHueShift, _slShdSaturation);
         colAmbient = AddColors( colAmbient, col);
@@ -1832,7 +1780,33 @@ void CLayerMixer::MixOneMipmap(CBrushShadowMap *pbsm, INDEX iMipmap)
     }
   } // set initial color
 
- #if (defined USE_PORTABLE_C)
+#if (defined __MSVC_INLINE__)
+  __asm {
+    cld
+    mov     ebx,D [this]
+    mov     ecx,D [ebx].lm_pixCanvasSizeU
+    imul    ecx,D [ebx].lm_pixCanvasSizeV
+    mov     edi,D [ebx].lm_pulShadowMap
+    mov     eax,D [colAmbient]
+    bswap   eax
+    rep     stosd
+  }
+
+#elif (defined __GNU_INLINE_X86_32__)
+  ULONG clob1, clob2, clob3;
+  __asm__ __volatile__ (
+    "cld                    \n\t"
+    "imull   %%esi, %%ecx   \n\t"
+    "bswapl  %%eax          \n\t"
+    "rep                    \n\t"
+    "stosl                  \n\t"
+        : "=a" (clob1), "=c" (clob2), "=D" (clob3)
+        : "c" (this->lm_pixCanvasSizeU), "S" (this->lm_pixCanvasSizeV),
+          "a" (colAmbient), "D" (this->lm_pulShadowMap)
+        : "cc", "memory"
+  );
+
+#else
   register ULONG count = this->lm_pixCanvasSizeU * this->lm_pixCanvasSizeV;
   #if PLATFORM_LITTLEENDIAN
   // Forces C fallback; BYTESWAP itself is a no-op on little endian.
@@ -1850,35 +1824,7 @@ void CLayerMixer::MixOneMipmap(CBrushShadowMap *pbsm, INDEX iMipmap)
     ptr++;
   }
 
- #elif (defined __MSVC_INLINE__)
-  __asm {
-    cld
-    mov     ebx,D [this]
-    mov     ecx,D [ebx].lm_pixCanvasSizeU
-    imul    ecx,D [ebx].lm_pixCanvasSizeV
-    mov     edi,D [ebx].lm_pulShadowMap
-    mov     eax,D [colAmbient]
-    bswap   eax
-    rep     stosd
-  }
-
- #elif (defined __GNU_INLINE__)
-  ULONG clob1, clob2, clob3;
-  __asm__ __volatile__ (
-    "cld                    \n\t"
-    "imull   %%esi, %%ecx   \n\t"
-    "bswapl  %%eax          \n\t"
-    "rep                    \n\t"
-    "stosl                  \n\t"
-        : "=a" (clob1), "=c" (clob2), "=D" (clob3)
-        : "c" (this->lm_pixCanvasSizeU), "S" (this->lm_pixCanvasSizeV),
-          "a" (colAmbient), "D" (this->lm_pulShadowMap)
-        : "cc", "memory"
-  );
-
- #else
-  #error Please write inline assembly for your platform.
- #endif
+#endif
 
   _pfWorldEditingProfile.StopTimer(CWorldEditingProfile::PTI_AMBIENTFILL);
 
@@ -1898,11 +1844,12 @@ void CLayerMixer::MixOneMipmap(CBrushShadowMap *pbsm, INDEX iMipmap)
   {FORDELETELIST( CBrushShadowLayer, bsl_lnInShadowMap, lm_pbsmShadowMap->bsm_lhLayers, itbsl)
   {
     CBrushShadowLayer &bsl = *itbsl;
+    ASSERT( bsl.bsl_plsLightSource!=NULL);
+    if( bsl.bsl_plsLightSource==NULL) continue; // safety check
     CLightSource &ls = *bsl.bsl_plsLightSource;
-    ASSERT( &ls!=NULL); if( &ls==NULL) continue; // safety check
 
     // skip if should not be applied
-    if( (bDynamicOnly && !(ls.ls_ulFlags&LSF_NONPERSISTENT)) || ls.ls_ulFlags&LSF_DYNAMIC) continue;
+    if( (bDynamicOnly && !(ls.ls_ulFlags&LSF_NONPERSISTENT)) || (ls.ls_ulFlags & LSF_DYNAMIC)) continue;
 
     // set corresponding shadowmap flag if this is an animating light
     if( ls.ls_paoLightAnimation!=NULL) lm_pbsmShadowMap->sm_ulFlags |= SMF_ANIMATINGLIGHTS;
@@ -1955,9 +1902,7 @@ void CLayerMixer::MixOneMipmap(CBrushShadowMap *pbsm, INDEX iMipmap)
 // copy from static shadow map to dynamic layer
 __forceinline void CLayerMixer::CopyShadowLayer(void)
 {
- #if (defined USE_PORTABLE_C)
-   memcpy(lm_pulShadowMap, lm_pulStaticShadowMap, lm_pixCanvasSizeU*lm_pixCanvasSizeV*4);
- #elif (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     cld
     mov     ebx,D [this]
@@ -1967,7 +1912,7 @@ __forceinline void CLayerMixer::CopyShadowLayer(void)
     mov     edi,D [ebx].lm_pulShadowMap
     rep     movsd
   }
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   ULONG clob1, clob2, clob3;
   __asm__ __volatile__ (
     "cld                    \n\t"
@@ -1980,21 +1925,16 @@ __forceinline void CLayerMixer::CopyShadowLayer(void)
         : "cc", "memory"
   );
 
- #else
-  #error Please write inline assembly for your platform.
- #endif
+#else
+  memcpy(lm_pulShadowMap, lm_pulStaticShadowMap, lm_pixCanvasSizeU*lm_pixCanvasSizeV*4);
+#endif
 }
 
 
 // copy from static shadow map to dynamic layer
 __forceinline void CLayerMixer::FillShadowLayer( COLOR col)
 {
- #if (defined USE_PORTABLE_C)
-   DWORD* dst = (DWORD*)lm_pulShadowMap;
-   int n = lm_pixCanvasSizeU*lm_pixCanvasSizeV;   
-   DWORD color = __builtin_bswap32(col);
-   while(n--) {*(dst++)=color;}
- #elif (defined __MSVC_INLINE__)
+#if (defined __MSVC_INLINE__)
   __asm {
     cld
     mov     ebx,D [this]
@@ -2006,7 +1946,7 @@ __forceinline void CLayerMixer::FillShadowLayer( COLOR col)
     rep     stosd
   }
 
- #elif (defined __GNU_INLINE__)
+#elif (defined __GNU_INLINE_X86_32__)
   ULONG clob1, clob2, clob3;
   __asm__ __volatile__ (
     "cld                    \n\t"
@@ -2020,9 +1960,12 @@ __forceinline void CLayerMixer::FillShadowLayer( COLOR col)
         : "cc", "memory"
   );
 
- #else
-  #error Please write inline assembly for your platform.
- #endif
+#else
+   DWORD* dst = (DWORD*)lm_pulShadowMap;
+   int n = lm_pixCanvasSizeU*lm_pixCanvasSizeV;   
+   DWORD color = BYTESWAP32_unsigned(col);
+   while(n--) {*(dst++)=color;}
+#endif
 }
 
 

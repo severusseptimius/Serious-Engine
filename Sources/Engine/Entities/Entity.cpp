@@ -186,7 +186,7 @@ CEntity::~CEntity(void)
   }
   // clear entity type
   en_RenderType = RT_NONE;
-  en_pecClass->RemReference();
+  if(en_pecClass != NULL) en_pecClass->RemReference();
   en_pecClass = NULL;
 
   en_fSpatialClassificationRadius = -1.0f;
@@ -481,7 +481,7 @@ void CEntity::GetCollisionBoxParameters(INDEX iBox, FLOATaabbox3D &box, INDEX &i
   if(en_RenderType==RT_SKAMODEL || en_RenderType==RT_SKAEDITORMODEL) {
     box.minvect = GetModelInstance()->GetCollisionBoxMin(iBox);
     box.maxvect = GetModelInstance()->GetCollisionBoxMax(iBox);
-    FLOATaabbox3D boxNS = box;
+    //FLOATaabbox3D boxNS = box;
     box.StretchByVector(GetModelInstance()->mi_vStretch);
     iEquality = GetModelInstance()->GetCollisionBoxDimensionEquality(iBox);
   } else {
@@ -1833,7 +1833,7 @@ void CEntity::FindSectorsAroundEntity(void)
 
   // for each brush in the world
   FOREACHINDYNAMICARRAY(en_pwoWorld->wo_baBrushes.ba_abrBrushes, CBrush3D, itbr) {
-    CBrush3D &br=*itbr;
+    //CBrush3D &br=*itbr;
     // if the brush entity is not zoning
     if (itbr->br_penEntity==NULL || !(itbr->br_penEntity->en_ulFlags&ENF_ZONING)) {
       // skip it
@@ -1925,9 +1925,9 @@ void CEntity::FindSectorsAroundEntityNear(void)
         // (use more detailed testing for moving brushes)
         (en_RenderType!=RT_BRUSH||
           // oriented box touches box of sector
-          (oboxEntity.HasContactWith(FLOATobbox3D(pbsc->bsc_boxBoundingBox)))&&
+          ((oboxEntity.HasContactWith(FLOATobbox3D(pbsc->bsc_boxBoundingBox)))&&
           // oriented box is in bsp
-          (pbsc->bsc_bspBSPTree.TestBox(oboxdEntity)>=0));
+          (pbsc->bsc_bspBSPTree.TestBox(oboxdEntity)>=0)));
     // if it is not
     if (!bIn) {
       // if it has link
@@ -2036,10 +2036,7 @@ static CStaticStackArray<CSentEvent> _aseSentEvents;  // delayed events
 /* Send an event to this entity. */
 void CEntity::SendEvent(const CEntityEvent &ee)
 {
-  if (this==NULL) {
-    ASSERT(FALSE);
-    return;
-  }
+  ASSERT(this!=NULL);
   CSentEvent &se = _aseSentEvents.Push();
   se.se_penEntity = this;
   se.se_peeEvent = ((CEntityEvent&)ee).MakeCopy();  // discard const qualifier
@@ -3104,11 +3101,11 @@ void CEntity::InflictRangeDamage(CEntity *penInflictor, enum DamageType dmtType,
     FLOAT3D vHitPos;
     FLOAT fMinD;
     if (
-      (en.en_RenderType==RT_MODEL || en.en_RenderType==RT_EDITORMODEL || 
+      ((en.en_RenderType==RT_MODEL || en.en_RenderType==RT_EDITORMODEL ||
         en.en_RenderType==RT_SKAMODEL || en.en_RenderType==RT_SKAEDITORMODEL )&&
-       CheckModelRangeDamage(en, vCenter, fMinD, vHitPos) ||
-      (en.en_RenderType==RT_BRUSH)&&
-       CheckBrushRangeDamage(en, vCenter, fMinD, vHitPos)) {
+       CheckModelRangeDamage(en, vCenter, fMinD, vHitPos)) ||
+      ((en.en_RenderType==RT_BRUSH)&&
+        CheckBrushRangeDamage(en, vCenter, fMinD, vHitPos))) {
 
       // find damage ammount
       FLOAT fAmmount = IntensityAtDistance(fDamageAmmount, fHotSpotRange, fFallOffRange, fMinD);
@@ -3146,7 +3143,7 @@ void CEntity::InflictBoxDamage(CEntity *penInflictor, enum DamageType dmtType,
     if (en.en_pciCollisionInfo==NULL) {
       continue;
     }
-    CCollisionInfo *pci = en.en_pciCollisionInfo;
+    //CCollisionInfo *pci = en.en_pciCollisionInfo;
     // if entity is not allowed to execute now
     if (!en.IsAllowedForPrediction()) {
       // do nothing
