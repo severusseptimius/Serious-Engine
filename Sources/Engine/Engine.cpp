@@ -128,13 +128,6 @@ BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 static void DetectCPU(void)
 {
   char strVendor[12+1] = { 0 };
-#if (defined USE_PORTABLE_C)  // rcg10072001
-  CPrintF(TRANSV("  (No CPU detection in this binary.)\n"));
-  #ifdef PLATFORM_PANDORA
-  sys_iCPUMHz = 400;    // conservative, ARM -> x86 cpu translation is not 1 to 1.
-  #endif
-
-#else
   strVendor[12] = 0;
   ULONG ulTFMS = 0;
   ULONG ulFeatures = 0;
@@ -221,8 +214,11 @@ static void DetectCPU(void)
   sys_iCPUStepping = iStepping;
   sys_bCPUHasMMX = bMMX!=0;
   sys_bCPUHasCMOV = bCMOV!=0;
+#ifdef PLATFORM_PANDORA
+  sys_iCPUMHz = 400;    // conservative, ARM -> x86 cpu translation is not 1 to 1.
+#else
   sys_iCPUMHz = INDEX(_pTimer->tm_llCPUSpeedHZ/1E6);
-
+#endif
   if( !bMMX) FatalError( TRANS("MMX support required but not present!"));
 }
 
