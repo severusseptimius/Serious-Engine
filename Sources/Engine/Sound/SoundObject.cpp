@@ -51,6 +51,7 @@ extern BOOL _bPredictionActive;
 extern FLOAT snd_fSoundVolume;
 extern FLOAT snd_fMusicVolume;
 
+#if 0 // DG: unused.
 static CTString GetPred(CEntity*pen)
 {
   CTString str1;
@@ -67,6 +68,7 @@ static CTString GetPred(CEntity*pen)
   str.PrintF("%08x-%s", pen, (const char *) str1);
   return str;
 }
+#endif // 0 (unused)
 /* ====================================================
  *
  *  Class global methods
@@ -238,9 +240,9 @@ void CSoundObject::Play_internal( CSoundData *pCsdLink, SLONG slFlags)
   Stop_internal();
 
   // mark new data as referenced once more
-  pCsdLink->AddReference();
+  if(pCsdLink != NULL) pCsdLink->AddReference();
   // mark old data as referenced once less
-  so_pCsdLink->RemReference();
+  if(so_pCsdLink != NULL) so_pCsdLink->RemReference();
 
   // store init SoundData
   so_pCsdLink = pCsdLink;

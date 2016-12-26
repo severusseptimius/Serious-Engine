@@ -40,14 +40,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define W  word ptr
 #define B  byte ptr
 
-#if (defined __MSVC_INLINE__)
-#define ASMOPT 1
-#elif (defined __GNU_INLINE__)
-#define ASMOPT 0  // !!! FIXME: rcg10112001 Write GCC inline asm versions...
-#else
-#define ASMOPT 0
-#endif
-
 
 extern BOOL CVA_bModels;
 extern BOOL GFX_bTruform;
@@ -483,7 +475,7 @@ static void PrepareModelMipForRendering( CModelData &md, INDEX iMip)
 
   // for each surface
   INDEX iSrfVx = 0;
-  INDEX iSrfEl = 0;
+  //INDEX iSrfEl = 0;
   {FOREACHINSTATICARRAY( mmi.mmpi_MappingSurfaces, MappingSurface, itms)
   {
     MappingSurface &ms = *itms;
@@ -663,7 +655,7 @@ static FLOAT   _fHazeAdd;
 // check vertex against fog
 static void GetFogMapInVertex( GFXVertex3 &vtx, GFXTexCoord &tex)
 {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
   __asm {
     mov     esi,D [vtx]
     mov     edi,D [tex]
@@ -708,7 +700,7 @@ static void GetFogMapInVertex( GFXVertex3 &vtx, GFXTexCoord &tex)
 // check vertex against haze
 static void GetHazeMapInVertex( GFXVertex3 &vtx, FLOAT &tx1)
 {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
   __asm {
     mov     esi,D [vtx]
     mov     edi,D [tx1]
@@ -1080,7 +1072,7 @@ static void UnpackFrame( CRenderModel &rm, BOOL bKeepNormals)
     const ModelFrameVertex16 *pFrame1 = rm.rm_pFrame16_1;
     if( pFrame0==pFrame1)
     {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
       // for each vertex in mip
       const SLONG fixLerpRatio = FloatToInt(fLerpRatio*256.0f); // fix 8:8
       SLONG slTmp1, slTmp2, slTmp3;
@@ -1196,7 +1188,7 @@ vtxNext16:
     // if lerping
     else
     {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
       // for each vertex in mip
       const SLONG fixLerpRatio = FloatToInt(fLerpRatio*256.0f); // fix 8:8
       SLONG slTmp1, slTmp2, slTmp3;
@@ -1365,7 +1357,7 @@ vtxNext16L:
     // if no lerping
     if( pFrame0==pFrame1)
     {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
       // for each vertex in mip
       const SLONG fixLerpRatio = FloatToInt(fLerpRatio*256.0f); // fix 8:8
       SLONG slTmp1, slTmp2, slTmp3;
@@ -1464,7 +1456,7 @@ vtxNext8:
     // if lerping
     else
     {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
       const SLONG fixLerpRatio = FloatToInt(fLerpRatio*256.0f); // fix 8:8
       SLONG slTmp1, slTmp2, slTmp3;
       // re-adjust stretching factors because of fixint lerping (divide by 256)
@@ -1610,7 +1602,7 @@ vtxNext8L:
   }
 
   // generate colors from shades
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
   __asm {
     pxor    mm0,mm0
     // construct 64-bit RGBA light
@@ -1961,7 +1953,7 @@ void CModelObject::RenderModel_View( CRenderModel &rm)
   _pfModelProfile.IncrementTimerAveragingCounter( CModelProfile::PTI_VIEW_INIT_VERTICES, _ctAllSrfVx);
 
   // for each surface in current mip model
-  BOOL bEmpty = TRUE;
+  //BOOL bEmpty = TRUE;
   {FOREACHINSTATICARRAY( mmi.mmpi_MappingSurfaces, MappingSurface, itms)
   {
     const MappingSurface &ms = *itms;
@@ -1969,12 +1961,12 @@ void CModelObject::RenderModel_View( CRenderModel &rm)
     ctSrfVx = ms.ms_ctSrfVx;
     // skip to next in case of invisible or empty surface
     if( (ms.ms_ulRenderingFlags&SRF_INVISIBLE) || ctSrfVx==0) break;
-    bEmpty = FALSE;
+    //bEmpty = FALSE;
     puwSrfToMip = &mmi.mmpi_auwSrfToMip[iSrfVx0];
     pvtxSrfBase = &_avtxSrfBase[iSrfVx0];
     INDEX iSrfVx;
 
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
     __asm {
       push    ebx
       mov     ebx,D [puwSrfToMip]
@@ -2074,7 +2066,7 @@ srfVtxLoop:
     const COLOR colD = AdjustColor( ms.ms_colDiffuse, _slTexHueShift, _slTexSaturation);
     colSrfDiff.MultiplyRGBA( colD, colMdlDiff);
 
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
     // setup texcoord array
     __asm {
       push    ebx
@@ -2134,7 +2126,7 @@ vtxEnd:
       for( INDEX iSrfVx=0; iSrfVx<ctSrfVx; iSrfVx++) pcolSrfBase[iSrfVx] = colSrfDiffAdj;
     }
     else {
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
       // setup color array
       const COLOR colS = colSrfDiff.ul.abgr;
       __asm {
@@ -2294,7 +2286,7 @@ diffColLoop:
       // for each vertex in the surface
       for( INDEX iSrfVx=0; iSrfVx<ctSrfVx; iSrfVx++) {
         // set detail texcoord and color
-        INDEX iMipVx = mmi.mmpi_auwSrfToMip[iSrfVx];
+        //INDEX iMipVx = mmi.mmpi_auwSrfToMip[iSrfVx];
         ptexSrfBase[iSrfVx].st.s = pvTexCoord[iSrfVx](1) * fTexCorrU;
         ptexSrfBase[iSrfVx].st.t = pvTexCoord[iSrfVx](2) * fTexCorrV;
         pcolSrfBase[iSrfVx]   = colSrfBump;
@@ -2335,7 +2327,7 @@ diffColLoop:
     // cache rotation
     const FLOATmatrix3D &m = rm.rm_mObjectRotation;
 
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
     __asm {
       push    ebx
       mov     ebx,D [m]
@@ -2530,7 +2522,7 @@ reflMipLoop:
     // cache object view rotation
     const FLOATmatrix3D &m = rm.rm_mObjectToView;
 
-#if ASMOPT == 1
+#if (defined __MSVC_INLINE__)
     __asm {
       push    ebx
       mov     ebx,D [m]

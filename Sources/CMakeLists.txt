@@ -110,21 +110,19 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -fno-unsafe-math-optimizations")
 
 	# TODO fix these warnings
-	add_compile_options(-Wno-sign-compare)
 	add_compile_options(-Wno-switch)
+	add_compile_options(-Wno-char-subscripts)
 	add_compile_options(-Wno-unknown-pragmas)
-	add_compile_options(-Wno-unused-variable)
-	add_compile_options(-Wno-unused-value)
-	add_compile_options(-Wno-reorder)
-	add_compile_options(-Wno-unused-but-set-variable)
-	add_compile_options(-Wno-parentheses)
+	add_compile_options(-Wno-unused-variable) # TODO: maybe only enable this for Entities
+	add_compile_options(-Wno-unused-value)    # same here (the Scripts generate tons of unused variables and values)
+	add_compile_options(-Wno-missing-braces)
+	add_compile_options(-Wno-overloaded-virtual)
+	add_compile_options(-Wno-invalid-offsetof)
 	MESSAGE(WARNING, "re-enable some of the warnings some day!")
 
 	if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
 		# !!! FIXME: turn a bunch of these off, this is just for now. I hope.  --ryan.
-		add_compile_options(-Wno-tautological-undefined-compare)
 		add_compile_options(-Wno-c++11-compat-deprecated-writable-strings)
-		add_compile_options(-Wno-logical-op-parentheses) # FIXME: this too should be re-enabled
 	endif()
 
 	if(MACOSX)
@@ -188,13 +186,20 @@ else()
     set(DEBUGSUFFIX "")
 endif()
 
-# This should not be needed anymore, but might be faster on 32bit x86
-option(USE_I386_ASM "Use X86 ASM" FALSE)
+option(USE_ASM "Use ASM code" TRUE)
+if (USE_ASM)
+    MESSAGE(STATUS "Using assembler code (when available)")
+else()
+    add_definitions(-DUSE_PORTABLE_C=1)
+    MESSAGE(STATUS "Using portable C instead of all ASM")
+endif()
 
-if (USE_I386_ASM)
+option(USE_I386_NASM_ASM "Use i386 nasm ASM code" FALSE)
+
+if (USE_ASM AND USE_I386_NASM_ASM)
     # You need the Netwide Assembler (NASM) to build this on Intel systems.
     #   http://nasm.sf.net/
-    add_definitions(-DUSE_I386_ASM=1)
+    add_definitions(-DUSE_I386_NASM_ASM=1)
     if (MACOSX)
         set(ASMOBJFMT "macho")
         list(APPEND ASMFLAGS --prefix _)
@@ -203,10 +208,9 @@ if (USE_I386_ASM)
     else()
         set(ASMOBJFMT "elf")
     endif()
-    MESSAGE(STATUS "Using i386 assembler")
+    MESSAGE(STATUS "Using i386 nasm ASM")
 else()
-    add_definitions(-DUSE_PORTABLE_C=1)
-    MESSAGE(STATUS "Using portable C instead of ASM")
+    MESSAGE(STATUS "Not using i386 nasm ASM")
 endif()
 
 option(PANDORA "Compile for Pandora" FALSE)
@@ -655,7 +659,7 @@ add_dependencies(${SHADERSLIB} ParseEntities)
 add_parser_and_scanner("Engine/Base/Parser" "Engine/Base/Scanner")
 add_parser_and_scanner("Engine/Ska/smcPars" "Engine/Ska/smcScan")
 
-if (USE_I386_ASM)
+if (USE_I386_NASM_ASM)
     add_custom_command(
         OUTPUT "SoundMixer386.o"
         MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Sound/SoundMixer386.asm"

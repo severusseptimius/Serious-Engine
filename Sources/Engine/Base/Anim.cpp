@@ -173,16 +173,14 @@ BOOL CAnimData::IsAutoFreed(void)
 // Reference counting functions
 void CAnimData::AddReference(void)
 {
-  if (this!=NULL) {
-    MarkUsed();
-  }
+  ASSERT(this!=NULL);
+  MarkUsed();
 }
 
 void CAnimData::RemReference(void)
 {
-  if (this!=NULL) {
-    RemReference_internal();
-  }
+  ASSERT(this!=NULL);
+  RemReference_internal();
 }
 
 void CAnimData::RemReference_internal(void)
@@ -296,13 +294,13 @@ void CAnimData::LoadFromScript_t( CTStream *File, CListHead *pFrameFileList) // 
 	char ld_line[ 128];
 	CTmpListHead TempAnimationList;
 	SLONG lc;
-	BOOL ret_val;
+	//BOOL ret_val;
 
 	//ASSERT( ad_Anims == NULL);
   // clears possible animations
   CAnimData::Clear();
 
-	ret_val = TRUE;
+	//ret_val = TRUE;
 	FOREVER
 	{
 		// Repeat reading of one line of script file until it is not empty or comment
@@ -617,7 +615,7 @@ CAnimObject::CAnimObject(void)
 /* Destructor. */
 CAnimObject::~CAnimObject(void)
 {
-  ao_AnimData->RemReference();
+  if(ao_AnimData != NULL) ao_AnimData->RemReference();
 }
 
 // copy from another object of same class
@@ -820,9 +818,9 @@ BOOL CAnimObject::IsUpToDate(const CUpdateable &ud) const
 void CAnimObject::SetData(CAnimData *pAD)
 {
   // mark new data as referenced once more
-  pAD->AddReference();
+  if(pAD != NULL) pAD->AddReference();
   // mark old data as referenced once less
-  ao_AnimData->RemReference();
+  if(ao_AnimData != NULL) ao_AnimData->RemReference();
   // remember new data
   ao_AnimData = pAD;
   if( pAD != NULL) StartAnim( 0);
@@ -904,14 +902,14 @@ void CAnimObject::PlayAnim(INDEX iNew, ULONG ulFlags)
     	class COneAnim *pCOA = &ao_AnimData->ad_Anims[ao_iCurrentAnim];
       TIME tmNow = _pTimer->CurrentTick();
       TIME tmLength = GetCurrentAnimLength();
-      FLOAT fFrame = ((_pTimer->CurrentTick() - ao_tmAnimStart)/pCOA->oa_SecsPerFrame);
+      FLOAT fFrame = ((tmNow - ao_tmAnimStart)/pCOA->oa_SecsPerFrame);
       INDEX iFrame = INDEX(fFrame);
       FLOAT fFract = fFrame-iFrame;
       iFrame = ClipFrame(iFrame);
       TIME tmPassed = (iFrame+fFract)*pCOA->oa_SecsPerFrame;
       TIME tmLeft = tmLength-tmPassed;
       // set time ahead to end of the current animation
-	    ao_tmAnimStart = _pTimer->CurrentTick()+tmLeft;
+	    ao_tmAnimStart = tmNow+tmLeft;
       // remember last animation
       ao_iLastAnim = ao_iCurrentAnim;
       // set new animation number

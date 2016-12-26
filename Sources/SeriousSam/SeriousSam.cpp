@@ -33,7 +33,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <Engine/CurrentVersion.h>
 #include <GameMP/Game.h>
 #define DECL_DLL
+#ifdef FIRST_ENCOUNTER
+#include <Entities/Global.h>
+#else
 #include <EntitiesMP/Global.h>
+#endif
 #include "resource.h"
 #include "SplashScreen.h"
 #include "MainWindow.h"
@@ -747,8 +751,8 @@ void DoGame(void)
   // set flag if not in game
   if( !_pGame->gm_bGameOn) _gmRunningGameMode = GM_NONE;
 
-  if( _gmRunningGameMode==GM_DEMO  && _pNetwork->IsDemoPlayFinished()
-    ||_gmRunningGameMode==GM_INTRO && _pNetwork->IsGameFinished()) {
+  if( (_gmRunningGameMode==GM_DEMO  && _pNetwork->IsDemoPlayFinished())
+    ||(_gmRunningGameMode==GM_INTRO && _pNetwork->IsGameFinished())) {
     _pGame->StopGame();
     _gmRunningGameMode = GM_NONE;
 
@@ -945,7 +949,7 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
       // if it is not a mouse message
       if( !(msg.message>=WM_MOUSEFIRST && msg.message<=WM_MOUSELAST) ) {
         // if not system key messages
-        if( !(msg.message==WM_KEYDOWN && msg.wParam==VK_F10
+        if( !((msg.message==WM_KEYDOWN && msg.wParam==VK_F10)
             ||msg.message==WM_SYSKEYDOWN)) {
           // dispatch it
           TranslateMessage(&msg);
@@ -1174,6 +1178,7 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
       // if toggling console
       BOOL bConsoleKey = sam_bToggleConsole || msg.message==WM_KEYDOWN && 
             // !!! FIXME: rcg11162001 This sucks.
+            // FIXME: DG: we could use SDL_SCANCODE_GRAVE ?
         #ifdef PLATFORM_UNIX
         (msg.wParam == SDLK_BACKQUOTE
         #else
