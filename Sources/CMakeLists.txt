@@ -102,11 +102,11 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	## For C flags
         set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g -D_DEBUG=1 -DDEBUG=1 -O0")
         if(PANDORA)
-            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -ffast-math")
-            set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -ffast-math")
+            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 - -faligned-new -ffast-math")
+            set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3  -faligned-new -ffast-math")
             set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -ffast-math")
         else()
-            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -fno-unsafe-math-optimizations")
+            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations")
             set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations")
             set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -fno-unsafe-math-optimizations")
         endif()
@@ -114,8 +114,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	## For C++ flags
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -D_DEBUG=1 -DDEBUG=1 -O0")
         if(PANDORA)
-            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -ffast-math")
-            set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -ffast-math")
+            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3  -faligned-new -ffast-math")
+            set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3  -faligned-new -ffast-math")
             set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -ffast-math")
         else()
             set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -fno-unsafe-math-optimizations")
@@ -716,6 +716,32 @@ if(NOT USE_SYSTEM_ZLIB)
         Engine/zlib/uncompr.c)
 endif()
 
+set(ENGINE_SAFEMATH_SRCS
+    Engine/Brushes/Brush.cpp
+    Engine/Brushes/BrushPolygon.cpp
+    Engine/Brushes/BrushSector.cpp
+    Engine/Entities/Entity.cpp
+    Engine/Entities/EntityClass.cpp
+    Engine/Entities/EntityCollision.cpp
+    Engine/Entities/PlayerCharacter.cpp
+    Engine/Terrain/TerrainMisc.cpp
+    Engine/Terrain/TerrainRayCasting.cpp
+    Engine/World/WorldCSG.cpp
+    Engine/World/WorldRayCasting.cpp
+    Engine/World/WorldCollision.cpp
+    Engine/World/WorldCollisionGrid.cpp
+
+    Engine/Math/Projection_Simple_DOUBLE.cpp
+    Engine/Math/Geometry_DOUBLE.cpp
+)
+add_library(engine_safemath STATIC
+    ${ENGINE_SAFEMATH_SRCS}
+)
+target_compile_options(engine_safemath PRIVATE "-fno-unsafe-math-optimizations")
+if(PANDORA)
+    target_compile_options(engine_safemath PRIVATE "-mfpu=vfpv3")
+endif()
+
 set(ENGINE_SRCS
     ${ENGINE_ENTITIES_CPP}
     Engine/Engine.cpp
@@ -755,23 +781,16 @@ set(ENGINE_SRCS
     Engine/Base/SDL/SDLInput.cpp
     Engine/Base/SDL/SDLEvents.cpp
     ${SYNCHRO_SRCS}
-    Engine/Brushes/Brush.cpp
     Engine/Brushes/BrushIO.cpp
     Engine/Brushes/BrushShadows.cpp
     Engine/Brushes/BrushTriangularize.cpp
     Engine/Brushes/BrushArchive.cpp
     Engine/Brushes/BrushImport.cpp
     Engine/Brushes/BrushMip.cpp
-    Engine/Brushes/BrushPolygon.cpp
     Engine/Brushes/BrushExport.cpp
-    Engine/Brushes/BrushSector.cpp
-    Engine/Entities/Entity.cpp
     Engine/Entities/NearestPolygon.cpp
     Engine/Entities/EntityProperties.cpp
-    Engine/Entities/PlayerCharacter.cpp
-    Engine/Entities/EntityClass.cpp
     Engine/Entities/FieldBSPTesting.cpp
-    Engine/Entities/EntityCollision.cpp
     Engine/Entities/EntityCopying.cpp
     Engine/Entities/LastPositions.cpp
     Engine/Math/Projection_Isometric.cpp
@@ -781,14 +800,12 @@ set(ENGINE_SRCS
     Engine/Math/Float.cpp
     Engine/Math/Object3D_CSG.cpp
     Engine/Math/Projection_Simple.cpp
-    Engine/Math/Projection_Simple_DOUBLE.cpp
     Engine/Math/Functions.cpp
     Engine/Math/ObjectSector.cpp
     Engine/Math/Placement.cpp
     Engine/Math/TextureMapping.cpp
     Engine/Math/Geometry.cpp
     Engine/Math/Projection.cpp
-    Engine/Math/Geometry_DOUBLE.cpp
     #Engine/Math/Object3D_IO.cpp  # Exploration 3D support.
     #Engine/Models/EditModel.cpp
     Engine/Models/Model.cpp
@@ -851,8 +868,6 @@ set(ENGINE_SRCS
     Engine/Terrain/TerrainArchive.cpp
     Engine/Terrain/TerrainEditing.cpp
     Engine/Terrain/TerrainLayer.cpp
-    Engine/Terrain/TerrainMisc.cpp
-    Engine/Terrain/TerrainRayCasting.cpp
     Engine/Terrain/TerrainRender.cpp
     Engine/Terrain/TerrainTile.cpp
     Engine/Rendering/Render.cpp
@@ -887,14 +902,10 @@ set(ENGINE_SRCS
     Engine/Templates/NameTable_CTFileName.cpp
     Engine/Templates/NameTable_CTranslationPair.cpp
     Engine/Templates/BSP.cpp
-    Engine/World/WorldCSG.cpp
     Engine/World/PhysicsProfile.cpp
-    Engine/World/WorldCollision.cpp
-    Engine/World/WorldIO.cpp
-    Engine/World/WorldRayCasting.cpp
     Engine/World/World.cpp
-    Engine/World/WorldCollisionGrid.cpp
     Engine/World/WorldEditingProfile.cpp
+    Engine/World/WorldIO.cpp
     ${ADDITIONAL_ENGINE_SRCS}
     ${ZLIB_SRCS}
 )
@@ -914,9 +925,11 @@ add_executable(ssam
     SeriousSam/MenuGadgets.cpp
     SeriousSam/MenuPrinting.cpp
 )
+target_link_libraries(ssam engine_safemath)
 add_dependencies(ssam ParseEntities)
 # Make symbols in the main executable available to dynamic objects
 set_target_properties(ssam PROPERTIES ENABLE_EXPORTS ON)
+
 
 # !!! FIXME: this is an option because you have to recompile the entire engine twice.
 # !!! FIXME:  If we can put the engine in a static library and not lose symbols,
