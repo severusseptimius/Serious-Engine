@@ -741,6 +741,7 @@ target_compile_options(engine_safemath PRIVATE "-fno-unsafe-math-optimizations")
 if(PANDORA)
     target_compile_options(engine_safemath PRIVATE "-mfpu=vfpv3")
 endif()
+add_dependencies(engine_safemath ParseEntities)
 
 set(ENGINE_SRCS
     ${ENGINE_ENTITIES_CPP}
