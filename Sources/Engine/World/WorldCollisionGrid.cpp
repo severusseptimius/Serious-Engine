@@ -58,10 +58,10 @@ static inline void BoxToGrid(
   iMaxX = (Isinf(fMaxX))?INDEX(GRID_MIN):Clamp(INDEX(ceil(fMaxX/GRID_CELLSIZE)), (INDEX)GRID_MIN, (INDEX)GRID_MAX);
   iMaxZ = (Isinf(fMaxZ))?INDEX(GRID_MIN):Clamp(INDEX(ceil(fMaxZ/GRID_CELLSIZE)), (INDEX)GRID_MIN, (INDEX)GRID_MAX);
 #else
-  iMinX = INDEX(GRID_MIN):INDEX(floor(fMinX/GRID_CELLSIZE));
-  iMinZ = INDEX(GRID_MIN):INDEX(floor(fMinZ/GRID_CELLSIZE));
-  iMaxX = INDEX(GRID_MIN):INDEX(ceil(fMaxX/GRID_CELLSIZE));
-  iMaxZ = INDEX(GRID_MIN):INDEX(ceil(fMaxZ/GRID_CELLSIZE));
+  iMinX = INDEX(floor(fMinX/GRID_CELLSIZE));
+  iMinZ = INDEX(floor(fMinZ/GRID_CELLSIZE));
+  iMaxX = INDEX(ceil(fMaxX/GRID_CELLSIZE));
+  iMaxZ = INDEX(ceil(fMaxZ/GRID_CELLSIZE));
 
   iMinX = Clamp(iMinX, (INDEX)GRID_MIN, (INDEX)GRID_MAX);
   iMinZ = Clamp(iMinZ, (INDEX)GRID_MIN, (INDEX)GRID_MAX);
