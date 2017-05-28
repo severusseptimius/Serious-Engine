@@ -169,6 +169,7 @@ public:
 
   /* Test if a sphere is inside, outside, or intersecting. (Just a trivial rejection test) */
   FLOAT TestSphere(const Vector<Type, iDimensions> &vSphereCenter, Type tSphereRadius) const;
+  int   TestSphere_hack(const FLOAT *params) const;
   /* Test if a box is inside, outside, or intersecting. (Just a trivial rejection test) */
   FLOAT TestBox(const OBBox<Type> &box) const;
 };
