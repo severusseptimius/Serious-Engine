@@ -313,7 +313,7 @@ Rect ExtractPolygonsInBox(CTerrain *ptrTerrain, const FLOATaabbox3D &bboxExtract
 #ifdef PANDORA
   #define Isinf(a) (((*(unsigned int*)&a)&0x7fffffff)==0x7f800000)
 #else
-  #define Isinf insif
+  #define Isinf isinf
 #endif
     rc.rc_iLeft   = (Isinf(bbox.minvect(1)))?(INDEX)0:Clamp((INDEX)(bbox.minvect(1)-0),(INDEX)0,ptrTerrain->tr_pixHeightMapWidth);
     rc.rc_iTop    = (Isinf(bbox.minvect(3)))?(INDEX)0:Clamp((INDEX)(bbox.minvect(3)-0),(INDEX)0,ptrTerrain->tr_pixHeightMapHeight);

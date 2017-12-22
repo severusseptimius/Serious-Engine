@@ -51,7 +51,7 @@ static inline void BoxToGrid(
 #ifdef PANDORA
   #define Isinf(a) (((*(unsigned int*)&a)&0x7fffffff)==0x7f800000)
 #else
-  #define Isinf insif
+  #define Isinf isinf
 #endif
   iMinX = (Isinf(fMinX))?INDEX(GRID_MIN):Clamp(INDEX(floor(fMinX/GRID_CELLSIZE)), (INDEX)GRID_MIN, (INDEX)GRID_MAX);
   iMinZ = (Isinf(fMinZ))?INDEX(GRID_MIN):Clamp(INDEX(floor(fMinZ/GRID_CELLSIZE)), (INDEX)GRID_MIN, (INDEX)GRID_MAX);
