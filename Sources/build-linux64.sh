@@ -18,6 +18,8 @@ cmake -DCMAKE_BUILD_TYPE=Debug .. $1
 
 # Right now we force x86, though...
 #cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 ..
-
+echo "ECC first"
+make ecc -j$NCPU
+echo "Then the rest..."
 make -j$NCPU
 
