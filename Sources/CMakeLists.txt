@@ -7,6 +7,8 @@ project(SeriousEngine)
 # Use system SDL2 is on by default
 option(USE_SYSTEM_SDL2 "Use systems sdl2 development files" On)
 option(USE_SYSTEM_ZLIB "Use systems zlib development files" On)
+option(USE_CCACHE "Set to ON to use ccache if present in the system" ${USE_CCACHE})
+
 
 # fallback for cmake versions without add_compile_options # RAKE! Borrowed from dhewm3 project
 if(NOT COMMAND add_compile_options)
@@ -23,6 +25,15 @@ include(CheckCXXCompilerFlag)
 
 # ssam expects the libs to be in Debug/
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/Debug)
+
+if(USE_CCACHE)
+    find_program(CCACHE_FOUND ccache)
+    if(CCACHE_FOUND)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    endif()
+endif()
+
 
 # Use systemwide SDL2 or custom build
 # RAKE!: Find a way to use their custom built library if
