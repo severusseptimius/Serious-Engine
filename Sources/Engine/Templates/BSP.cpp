@@ -506,7 +506,7 @@ FLOAT BSPNode<Type, iDimensions>::TestSphere(const Vector<Type, iDimensions> &vS
     }
   }
 }
-#define SPHERE_HACK
+
 #ifdef SPHERE_HACK
 // truncate doubles in d0-d3 to floats in d0-d1
 // destroys d2-d7

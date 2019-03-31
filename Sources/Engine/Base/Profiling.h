@@ -19,7 +19,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
   #pragma once
 #endif
 
-#if ENGINE_INTERNAL && !defined(PANDORA)
+#if ENGINE_INTERNAL
 
 #include <Engine/Base/CTString.h>
 #include <Engine/Base/Timer.h>
@@ -68,7 +68,7 @@ private:
 class CProfileForm {
 public:
 
-#if ENGINE_INTERNAL && !defined(PANDORA)
+#if ENGINE_INTERNAL
 // implementation:
   CTString pf_strTitle;             // main title of the profiling form
   CTString pf_strAveragingUnits;    // name for averaging units
@@ -117,6 +117,9 @@ public:
   };
   /* Get current value of a counter. */
   INDEX GetCounterCount(INDEX iCounter);
+
+  inline void CountersClear() {pf_apcCounters.Clear();};
+  inline void TimersClear() {pf_aptTimers.Clear();};
 
 #if TIMER_PROFILING
   /* Start a timer. */
@@ -173,11 +176,14 @@ public:
   inline void IncrementCounter(INDEX iCounter, INDEX ctAdd=1) {}
   inline void StartTimer(INDEX iTimer) {};
   inline void StopTimer(INDEX iTimer) {};
+  inline void IncrementAveragingCounter(INDEX ctAdd=1) {};
   inline void IncrementTimerAveragingCounter(INDEX iTimer, INDEX ctAdd=1) {};
   inline void SetCounterName_internal(INDEX iCounter, const CTString &strName) {};
   inline void SetTimerName_internal(INDEX iTimer, const CTString &strName, const CTString &strAveragingName) {};
   #define SETCOUNTERNAME(a,b) SetCounterName_internal(a,"")
   #define SETTIMERNAME(a,b,c) SetTimerName_internal(a,"","")
+  inline void CountersClear() {};
+  inline void TimersClear() {};
 
 #endif // ENGINE_INTERNAL
 
