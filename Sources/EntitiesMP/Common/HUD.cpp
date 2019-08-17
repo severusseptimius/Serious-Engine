@@ -519,18 +519,18 @@ static void HUD_DrawBar( FLOAT fCenterX, FLOAT fCenterY, PIX pixSizeX, PIX pixSi
   // determine bar position and inner size
   switch( eBarOrientation) {
   case BO_UP:
-    pixSizeJ *= (PIX) fNormValue;
+    pixSizeJ = (PIX) (pixSizeJ*fNormValue);
     break;
   case BO_DOWN:
     pixUpper  = pixUpper + (PIX)ceil(pixSizeJ * (1.0f-fNormValue));
-    pixSizeJ *= (PIX) fNormValue;
+    pixSizeJ = (PIX) (pixSizeJ*fNormValue);
     break;
   case BO_LEFT:
-    pixSizeI *= (PIX) fNormValue;
+    pixSizeI = (PIX) (pixSizeI*fNormValue);
     break;
   case BO_RIGHT:
     pixLeft   = pixLeft + (PIX)ceil(pixSizeI * (1.0f-fNormValue));
-    pixSizeI *= (PIX) fNormValue;
+    pixSizeI = (PIX) (pixSizeI*fNormValue);
     break;
   }
   // done
