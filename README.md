@@ -69,7 +69,7 @@ cp Sources/cmake-build/Debug/* Bin/
 
 #### Building (only for SS:TFE)
 
-Same as SS:TSE, but note the following:
+Type this in your terminal:
 
 ```
 Sources/build-linux64.sh -DTFE=TRUE	# use build-linux32.sh for 32-bits
