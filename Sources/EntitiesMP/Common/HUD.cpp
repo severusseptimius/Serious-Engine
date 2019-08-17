@@ -562,8 +562,7 @@ static void DrawAspectCorrectTextureCentered( class CTextureObject *_pTO, FLOAT 
   CTextureData *ptd = (CTextureData*)_pTO->GetData();
   FLOAT fTexSizeI = ptd->GetPixWidth();
   FLOAT fTexSizeJ = ptd->GetPixHeight();
-  FLOAT fHeight = fWidth*fTexSizeJ/fTexSizeJ; // FIXME: not fTexSizeJ/fTexSizeI ??
-  STUBBED("fWidth*fTexSizeJ/fTexSizeJ is most likely not intended!");
+  FLOAT fHeight = fWidth*fTexSizeJ/fTexSizeI;
   
   _pDP->InitTexture( _pTO);
   _pDP->AddTexture( fX-fWidth*0.5f, fY-fHeight*0.5f, fX+fWidth*0.5f, fY+fHeight*0.5f, 0, 0, 1, 1, col);
