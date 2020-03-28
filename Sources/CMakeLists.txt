@@ -952,6 +952,7 @@ set_target_properties(ssam PROPERTIES ENABLE_EXPORTS ON)
 option(BUILD_DEDICATED_SERVER "Compile the dedicated server, too" FALSE)
 if(BUILD_DEDICATED_SERVER)
     add_executable(SeriousSamDedicated ${ENGINE_SRCS} DedicatedServer/DedicatedServer.cpp)
+    target_link_libraries(SeriousSamDedicated engine_safemath)
     add_dependencies(SeriousSamDedicated ParseEntities)
     # Make symbols in the main executable available to dynamic objects
     set_target_properties(SeriousSamDedicated PROPERTIES ENABLE_EXPORTS ON)
