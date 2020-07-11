@@ -50,7 +50,7 @@ BOOL PeekMessage(MSG *msg, void *hwnd, UINT wMsgFilterMin,
             case SDL_KEYUP:
                 if (sdlevent.key.keysym.sym == SDLK_BACKQUOTE)
                     msg->unicode = '~';  // !!! FIXME: this is all a hack.
-                #if defined(PLATFORM_PANDORA) || defined(PPLATFORM_PTRA)
+                #if defined(PLATFORM_PANDORA) || defined(PLATFORM_PYRA)
                 if(sdlevent.key.keysym.sym == SDLK_RCTRL) {
                     msg->message = (sdlevent.type==SDL_KEYDOWN)?WM_RBUTTONDOWN:WM_RBUTTONUP;
                 } else if(sdlevent.key.keysym.sym == SDLK_RSHIFT) {

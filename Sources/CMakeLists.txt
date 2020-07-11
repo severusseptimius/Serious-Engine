@@ -260,7 +260,7 @@ endif()
 
 option(PYRA "Compile for Pyra" FALSE)
 if (PYRA)
-    add_definitions(-DPLATFORM_PYRAA=1)
+    add_definitions(-DPLATFORM_PYRA=1)
 endif()
 
 option(USE_TREMOR "Use Tremor instead of Vorbis" FALSE)
