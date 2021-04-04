@@ -512,7 +512,7 @@ void CCastRay::TestBrushSector(CBrushSector *pbscSector)
         continue;
       }
     }
-#ifdef __ARM_NEON__
+#if defined __ARM_NEON__ && !defined PLATFORM_MACOSX
     // get distances of ray points from the polygon plane
     register FLOAT fDistance0 __asm__("s0") = bpoPolygon.bpo_pbplPlane->bpl_plAbsolute.PointDistance(cr_vOrigin);
     register FLOAT fDistance1 __asm__("s2") = bpoPolygon.bpo_pbplPlane->bpl_plAbsolute.PointDistance(cr_vTarget);

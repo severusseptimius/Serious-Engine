@@ -2106,7 +2106,7 @@ vtxRest:
 vtxEnd:
       pop     ebx
     }
-#elif defined(__ARM_NEON__)
+#elif defined(__ARM_NEON__) && !defined (PLATFORM_MACOSX)
     register float tc_u __asm__("s0") = fTexCorrU;
     register float tc_v __asm__("s1") = fTexCorrV;
     const void *tc_src = pvTexCoord->vector;
