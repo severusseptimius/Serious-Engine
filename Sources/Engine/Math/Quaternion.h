@@ -370,7 +370,7 @@ void Quaternion<Type>::FromEuler(const Vector<Type, 3> &a)
 template<class Type>
 Type Quaternion<Type>::EPS(Type orig) const
 {
-#ifdef PLATFORM_PANDORA
+#if defined(PLATFORM_PANDORA) || defined(PLATFORM_PYRA)
     if ((orig <= 1e-4f) && (orig >= -1e-4f))
 #else
     if ((orig <= 10e-6f) && (orig >= -10e-6f))

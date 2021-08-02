@@ -50,10 +50,10 @@ BOOL PeekMessage(MSG *msg, void *hwnd, UINT wMsgFilterMin,
             case SDL_KEYUP:
                 if (sdlevent.key.keysym.sym == SDLK_BACKQUOTE)
                     msg->unicode = '~';  // !!! FIXME: this is all a hack.
-                #if defined(PLATFORM_PANDORA) || defined(PLATFORM_PYRA)
-                if(sdlevent.key.keysym.sym == SDLK_RCTRL) {
+                #if defined(PLATFORM_PANDORA) || defined(PPLATFORM_PYRA)
+                if(sdlevent.key.keysym.sym == SDLK_RSHIFT) {
                     msg->message = (sdlevent.type==SDL_KEYDOWN)?WM_RBUTTONDOWN:WM_RBUTTONUP;
-                } else if(sdlevent.key.keysym.sym == SDLK_RSHIFT) {
+                } else if(sdlevent.key.keysym.sym == SDLK_RCTRL) {
                     msg->message = (sdlevent.type==SDL_KEYDOWN)?WM_LBUTTONDOWN:WM_LBUTTONUP;
                 } else
                 #endif
@@ -115,7 +115,7 @@ SHORT GetKeyState(int vk)
 {
     SHORT retval = 0;
 #if defined(PLATFORM_PANDORA) || defined(PLATFORM_PYRA)
-    Uint8 *keystate = SDL_GetKeyboardState(NULL);
+    const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 #endif
 
     switch (vk)
@@ -124,7 +124,7 @@ SHORT GetKeyState(int vk)
             if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK)
                 retval = 0x8000;
             #if defined(PLATFORM_PANDORA) || defined(PLATFORM_PYRA)
-            if(keystate[SDL_SCANCODE_RSHIFT])
+            if(keystate[SDL_SCANCODE_RCTRL])
                 retval = 0x8000;
             #endif
             break;
@@ -133,7 +133,7 @@ SHORT GetKeyState(int vk)
             if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_RMASK)
                 retval = 0x8000;
             #if defined(PLATFORM_PANDORA) || defined(PLATFORM_PYRA)
-            if(keystate[SDL_SCANCODE_RCTRL])
+            if(keystate[SDL_SCANCODE_RSHIFT])
                 retval = 0x8000;
             #endif
             break;

@@ -288,11 +288,11 @@ static void SetKeyFromEvent(const SDL_Event *event, const BOOL bDown)
     return;
   } // if
 
-  #ifdef PLATFORM_PANDORA
-  if(event->key.keysym.sym==SDLK_RSHIFT) {
+  #if defined(PLATFORM_PANDORA) || defined(PLATFORM_PYRA)
+  if(event->key.keysym.sym==SDLK_RCTRL) {
     _abKeysPressed[KID_MOUSE1] = bDown;
     return;
-  } else if(event->key.keysym.sym==SDLK_RCTRL) {
+  } else if(event->key.keysym.sym==SDLK_RSHIFT) {
     _abKeysPressed[KID_MOUSE2] = bDown;
     return;
   }

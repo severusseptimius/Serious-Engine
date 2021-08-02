@@ -887,7 +887,7 @@ nextRowO:
     UWORD words[4];
     WORD  iwords[4];
     UBYTE bytes[8];
-  };
+  } __attribute__((packed));	//avoid optimisation and BUSERROR on Pyra build
   for (int i=0; i<pixHeight; i++) {
     int idx = i&3;
     uConv dith;
