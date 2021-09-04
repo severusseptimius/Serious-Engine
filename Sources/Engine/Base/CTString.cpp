@@ -291,7 +291,7 @@ ULONG CTString::GetHash(void) const
   INDEX len = strlen(str_String);
 
   for(INDEX i=0; i<len; i++) {
-    ulKey = _rotl(ulKey,4)+toupper(str_String[i]);
+    ulKey = rotl(ulKey,4)+toupper(str_String[i]);
   }
   return ulKey;
 }
