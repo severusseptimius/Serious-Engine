@@ -1,7 +1,7 @@
 %{
 // rcg10042001 Changed to specify Ecc directory...
-#include "Ecc/StdH.h"
-#include "Ecc/Main.h"
+#include "StdH.h"
+#include "Main.h"
 
 // turn off over-helpful bit of bison... --ryan.
 #ifdef __GNUC__
@@ -984,7 +984,6 @@ procedure_implementation
     sscanf($3.strString, "%s %s", strInputEventType, strInputEventName);
 
     char strStateID[256];
-    const char *strBaseStateID = "-1";
     if(strcmp(RemoveLineDirective(strProcedureName), "Main")==0){
       strcpy(strStateID, "1");
       if(strncmp(strInputEventType, "EVoid", 4)!=0 && _strCurrentThumbnail[2]!=0) {
