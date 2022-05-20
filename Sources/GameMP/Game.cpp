@@ -2804,11 +2804,13 @@ void CGame::GameMainLoop(void)
 static CTextureObject _toPointer;
 static CTextureObject _toBcgClouds;
 static CTextureObject _toBcgGrid;
+#ifndef FIRST_ENCOUNTER
 static CTextureObject _toBackdrop;
 static CTextureObject _toSamU;
 static CTextureObject _toSamD;
 static CTextureObject _toLeftU;
 static CTextureObject _toLeftD;
+#endif
 
 static PIXaabbox2D _boxScreen_SE;
 static PIX _pixSizeI_SE;
@@ -2840,20 +2842,24 @@ void CGame::LCDInit(void)
     _toBcgGrid.SetData_t(CTFILENAME("TexturesMP\\General\\grid.tex"));
 #endif
     // thoses are not in original TFE datas and must be added externaly (with SE1_10.gro or a minimal versio of it)
+#ifndef FIRST_ENCOUNTER
     _toBackdrop.SetData_t(CTFILENAME("TexturesMP\\General\\MenuBack.tex"));
     _toSamU.SetData_t(CTFILENAME("TexturesMP\\General\\SamU.tex"));
     _toSamD.SetData_t(CTFILENAME("TexturesMP\\General\\SamD.tex"));
     _toLeftU.SetData_t(CTFILENAME("TexturesMP\\General\\LeftU.tex"));
     _toLeftD.SetData_t(CTFILENAME("TexturesMP\\General\\LeftD.tex"));
+#endif
     // force constant textures
     ((CTextureData*)_toBcgClouds.GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toPointer  .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toBcgGrid  .GetData())->Force(TEX_CONSTANT);
+#ifndef FIRST_ENCOUNTER
     ((CTextureData*)_toBackdrop .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toSamU     .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toSamD     .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toLeftU    .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toLeftD    .GetData())->Force(TEX_CONSTANT);
+#endif
 
   } catch (char *strError) {
     FatalError("%s\n", strError);
@@ -2913,6 +2919,7 @@ void CGame::LCDScreenBoxOpenRight(COLOR col)
 }
 void CGame::LCDRenderClouds1(void)
 {
+#ifndef FIRST_ENCOUNTER
   _pdp_SE->PutTexture(&_toBackdrop, _boxScreen_SE, C_WHITE|255);
 
   if (!_bPopup) {
@@ -2926,7 +2933,7 @@ void CGame::LCDRenderClouds1(void)
     INDEX iYB = iYM + iSize;
     INDEX iXL = 420;
     INDEX iXR = (INDEX) (iXL + iSize*_pdp_SE->dp_fWideAdjustment);
-    
+
     box = PIXaabbox2D( PIX2D( iXL*_pdp_SE->GetWidth()/640, iYU*_pdp_SE->GetHeight()/480) ,
                        PIX2D( iXR*_pdp_SE->GetWidth()/640, iYM*_pdp_SE->GetHeight()/480));
     _pdp_SE->PutTexture(&_toSamU, box, SE_COL_BLUE_NEUTRAL|255);
@@ -2959,7 +2966,9 @@ void CGame::LCDRenderClouds1(void)
     _pdp_SE->PutTexture(&_toLeftD, box, SE_COL_BLUE_NEUTRAL|200);
   
   }
-
+#else
+  _pdp_SE->Fill(SE_COL_BLUE_DARK_HV | 255);
+#endif
   MEXaabbox2D boxBcgClouds1;
   TiledTextureSE(_boxScreen_SE, 1.2f*_pdp_SE->GetWidth()/640.0f, 
     MEX2D(sin(_tmNow_SE*0.5f)*35,sin(_tmNow_SE*0.7f+1)*21),   boxBcgClouds1);
