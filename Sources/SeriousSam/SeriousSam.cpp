@@ -366,6 +366,10 @@ void StartNextDemo(void)
     }
   }
 
+  if (_lhAutoDemos.Count()==1){
+    _bInAutoPlayLoop = FALSE;
+  }
+
   if (_gmRunningGameMode==GM_NONE) {
     _bInAutoPlayLoop = FALSE;
   }
