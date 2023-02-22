@@ -45,7 +45,7 @@ Once you've installed Visual Studio and (optionally) DirectX8 SDK, you can build
 Type this in your terminal:
 
 ```
-git clone https://github.com/rcgordon/Serious-Engine.git
+git clone https://github.com/ptitSeb/Serious-Engine
 cd Serious-Engine
 ```
 
@@ -62,7 +62,9 @@ Alternatively, you can simply copy the whole content of the Windows install as b
 Type this in your terminal:
 
 ```
-Sources/build-linux64.sh            # use build-linux32.sh for 32-bits
+cd Sources
+./build-linux64.sh            # use build-linux32.sh for 32-bits
+cd ..
 cp Sources/cmake-build/ssam Bin/
 cp Sources/cmake-build/Debug/* Bin/
 ```
@@ -72,7 +74,9 @@ cp Sources/cmake-build/Debug/* Bin/
 Type this in your terminal:
 
 ```
-Sources/build-linux64.sh -DTFE=TRUE	# use build-linux32.sh for 32-bits
+cd Sources
+./build-linux64.sh -DTFE=TRUE	# use build-linux32.sh for 32-bits
+cd ..
 cp Sources/cmake-build/ssam-tfe Bin/
 cp Sources/cmake-build/Debug/* Bin/
 ```
