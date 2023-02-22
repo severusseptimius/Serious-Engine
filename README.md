@@ -53,7 +53,8 @@ cd Serious-Engine
 
 If you have access to a copy of the game (either by CD or through Steam),
 you can copy the *.gro files from the game directory to the repository.
-Note that for running SS:TFE, you don't need the ModEXT.txt file, it's only for SS:TSE.
+
+Note that **for running SS:TFE, you have to delete or rename the ModEXT.txt file**, it's only for SS:TSE.
 
 Alternatively, you can simply copy the whole content of the Windows install as base dir, add the `SE1_10.gro` from the repo in the root folder of the install, and then copy the binary built in `Bin` folder
 
