@@ -51,6 +51,20 @@ if(USE_SYSTEM_ZLIB)
     endif()
 endif()
 
+find_package(OGG REQUIRED)
+if(OGG_FOUND)
+	include_directories(${OGG_INCLUDE_DIR}) # First check for system library 
+else()
+    include_directories(${CMAKE_SOURCE_DIR}/External/libogg) # Then use the bundled one 
+endif()
+
+find_package(VORBIS REQUIRED)
+if(VORBIS_FOUND)
+	include_directories(${VORBIS_INCLUDE_DIR}) # First check for system library 
+else()
+    include_directories(${CMAKE_SOURCE_DIR}/External/libvorbis) # Then use the bundled one
+endif()
+
 # RAKE! Where to install the binaries.
 if(CMAKE_INSTALL_PREFIX STREQUAL "/usr/local" OR CMAKE_INSTALL_PREFIX STREQUAL "") # Only works for linux since I don't
                                                                                    # know what default is for windows/macos/freebsd.
