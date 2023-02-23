@@ -10,16 +10,6 @@ option(USE_SYSTEM_ZLIB "Use systems zlib development files" On)
 option(USE_CCACHE "Set to ON to use ccache if present in the system" ${USE_CCACHE})
 
 
-# fallback for cmake versions without add_compile_options # RAKE! Borrowed from dhewm3 project
-if(NOT COMMAND add_compile_options)
-	function(add_compile_options)
-		foreach(arg ${ARGN})
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${arg}" PARENT_SCOPE)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${arg}" PARENT_SCOPE)
-		endforeach()
-	endfunction()
-endif()
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(CheckCXXCompilerFlag)
 include(ParserAndScanner)
